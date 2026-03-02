@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeu Multijoueur</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Jeu Multijoueur</h1>
+
+<div>
+    <p>Points : <span id="points">0</span></p>
+
+    <h2>Tirer une action</h2>
+    <select id="difficulty">
+      <option value="easy">Facile</option>
+      <option value="medium">Moyen</option>
+      <option value="hard">Difficile</option>
+    </select>
+    <button id="drawBtn">Tirer action</button>
+    <p id="currentAction"></p>
+    <button id="completeBtn">Compléter action</button>
+
+    <h2>Acheter un cadeau</h2>
+    <select id="gifts"></select>
+    <button id="buyGiftBtn">Acheter</button>
+
+    <h2>Notifications</h2>
+    <div id="notifications" style="border:1px solid #333; padding:5px; height:80px; overflow-y:auto; background:#f0f0f0;"></div>
+
+    <h2>Classement</h2>
+    <ul id="leaderboard"></ul>
+
+    <input id="nameInput" placeholder="Votre pseudo">
+    <button id="nameBtn">Valider pseudo</button>
+</div>
+
+<script src="frontend.js"></script>
+</body>
+</html>
