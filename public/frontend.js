@@ -92,4 +92,5 @@ document.getElementById('buyGiftBtn').addEventListener('click', () => {
 document.getElementById('nameBtn').addEventListener('click', () => {
     const name = nameInput.value.trim();
     if(name) ws.send(JSON.stringify({ type: 'set-name', name }));
+
 });
