@@ -85,11 +85,18 @@ ws.onmessage = (event) => {
 
     // Game start
     if (data.type === "game-start") {
-        document.getElementById("notification").innerText = "Partie commencée !";
-        updateScores(data.players.map(name => ({ name, points: 0 })));
-        currentTurn = data.currentTurn;
-        updateTurnDisplay();
-    }
+
+    // 🔥 Forcer l'affichage du jeu pour TOUS les joueurs
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("game").style.display = "block";
+
+    document.getElementById("notification").innerText = "Partie commencée !";
+
+    updateScores(data.players.map(name => ({ name, points: 0 })));
+
+    currentTurn = data.currentTurn;
+    updateTurnDisplay();
+}
 
     // Action drawn
     if (data.type === "action-drawn") {
@@ -140,3 +147,4 @@ function updateScores(players) {
         list.appendChild(li);
     });
 }
+
