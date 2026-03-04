@@ -43,8 +43,8 @@ wss.on('connection', ws => {
             case 'draw-action':
                 const filtered = actions.filter(a => a.difficulty === data.difficulty);
                 const action = filtered[Math.floor(Math.random() * filtered.length)];
-
-                // Action envoyée à tous
+            
+                // Envoyer à tous les joueurs
                 players.forEach(p => p.send(JSON.stringify({ type: 'action-drawn', action })));
                 // Notification
                 players.forEach(p => p.send(JSON.stringify({ type: 'notification', msg: `${ws.playerData.name} a tiré une action !` })));
@@ -81,4 +81,5 @@ wss.on('connection', ws => {
         players = players.filter(p => p !== ws);
         broadcastLeaderboard();
     });
+
 });
