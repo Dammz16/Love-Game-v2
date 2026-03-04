@@ -1,5 +1,5 @@
 [
   { "id": 1, "name": "Faire 10 pompes", "difficulty": "easy", "points": 10 },
-  { "id": 2, "name": "Écrire un poème", "difficulty": "medium", "points": 20 },
-  { "id": 3, "name": "Coder un mini-jeu", "difficulty": "hard", "points": 50 }
+  { "id": 2, "name": "Résoudre un puzzle", "difficulty": "medium", "points": 20 },
+  { "id": 3, "name": "Courir 1 km", "difficulty": "hard", "points": 30 }
 ]
