@@ -1,42 +1,73 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jeu Multijoueur</title>
-<link rel="stylesheet" href="style.css">
+    <title>Jeu Multijoueur V2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body { font-family: Arial; text-align: center; padding: 20px; }
+        button { padding: 10px; margin: 5px; }
+        #game { display: none; }
+        #notification { color: green; margin: 10px; }
+        #currentTurn { font-weight: bold; margin: 10px; }
+        #scores { margin-top: 20px; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-<h1>Jeu Multijoueur</h1>
 
-<div>
-    <p>Points : <span id="points">0</span></p>
+    <h1>🎮 Jeu Multijoueur V2</h1>
 
-    <h2>Tirer une action</h2>
-<select id="difficulty">
-  <option value="easy">Facile</option>
-  <option value="medium">Moyen</option>
-  <option value="hard">Difficile</option>
-</select>
-<button id="drawBtn">Tirer action</button>
-<p id="currentAction"></p>
-    <button id="completeBtn">Compléter action</button>
+    <!-- ====================== -->
+    <!-- MENU -->
+    <!-- ====================== -->
 
-    <h2>Acheter un cadeau</h2>
-    <select id="gifts"></select>
-    <button id="buyGiftBtn">Acheter</button>
+    <div id="menu">
+        <input type="text" id="playerName" placeholder="Ton prénom">
 
-    <h2>Notifications</h2>
-    <div id="notifications" style="border:1px solid #333; padding:5px; height:80px; overflow-y:auto; background:#f0f0f0;"></div>
+        <h3>Créer une salle</h3>
+        <select id="mode">
+            <option value="coop">Coopératif</option>
+            <option value="versus">Compétitif</option>
+        </select>
+        <button id="createRoom">Créer</button>
 
-    <h2>Classement</h2>
-    <ul id="leaderboard"></ul>
+        <h3>Rejoindre une salle</h3>
+        <input type="text" id="roomCode" placeholder="Code salle">
+        <button id="joinRoom">Rejoindre</button>
 
-    <input id="nameInput" placeholder="Votre pseudo">
-    <button id="nameBtn">Valider pseudo</button>
-</div>
+        <p id="menuError" style="color:red;"></p>
+    </div>
 
-<script src="frontend.js"></script>
+    <!-- ====================== -->
+    <!-- GAME -->
+    <!-- ====================== -->
+
+    <div id="game">
+        <h2 id="roomDisplay"></h2>
+
+        <div id="currentTurn"></div>
+
+        <div id="drawSection">
+            <select id="difficulty">
+                <option value="easy">Facile</option>
+                <option value="medium">Moyen</option>
+                <option value="hard">Difficile</option>
+            </select>
+            <button id="drawBtn">Tirer une action</button>
+        </div>
+
+        <h3 id="currentAction"></h3>
+        <button id="completeBtn" class="hidden">Valider l'action</button>
+
+        <div id="notification"></div>
+
+        <div id="scores">
+            <h3>Scores</h3>
+            <ul id="scoreList"></ul>
+            <h3 id="coopTotal"></h3>
+        </div>
+    </div>
+
+    <script src="frontend.js"></script>
 </body>
-
 </html>
