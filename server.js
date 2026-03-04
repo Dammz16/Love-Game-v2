@@ -1,85 +1,157 @@
 const express = require('express');
+const http = require('http');
 const { WebSocketServer } = require('ws');
 const fs = require('fs');
 
 const app = express();
 app.use(express.static('public'));
 
-// Charger actions et cadeaux
-let actions = JSON.parse(fs.readFileSync('./data/actions.json'));
-let gifts = JSON.parse(fs.readFileSync('./data/gifts.json'));
-
-// Endpoints HTTP
-app.get('/api/actions', (req, res) => res.json(actions));
-app.get('/api/gifts', (req, res) => res.json(gifts));
-
-// PORT dynamique pour déploiement
-const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
-// WebSocket
+const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
-let players = [];
 
-// Fonction pour envoyer le leaderboard à tous
-function broadcastLeaderboard() {
-    const leaderboard = players.map(p => ({ name: p.playerData.name, points: p.playerData.points }));
-    players.forEach(p => p.send(JSON.stringify({ type: 'leaderboard', leaderboard })));
+const actions = JSON.parse(fs.readFileSync('./data/actions.json'));
+
+let rooms = {};
+
+function generateRoomCode() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
 }
 
-// Gestion des connexions
-wss.on('connection', ws => {
-    // Initialisation joueur
-    ws.playerData = { points: 0, name: `Player${players.length + 1}` };
-    players.push(ws);
+function broadcastRoom(roomCode, message) {
+    rooms[roomCode].players.forEach(player => {
+        player.send(JSON.stringify(message));
+    });
+}
 
-    ws.send(JSON.stringify({ type: 'connected', msg: `Bienvenue ${ws.playerData.name} !` }));
-    broadcastLeaderboard();
+function nextTurn(roomCode) {
+    const room = rooms[roomCode];
+    room.currentTurn = (room.currentTurn + 1) % room.players.length;
+}
 
-    ws.on('message', message => {
-        const data = JSON.parse(message);
+wss.on('connection', (ws) => {
 
-        switch(data.type) {
-            case 'draw-action':
-                const filtered = actions.filter(a => a.difficulty === data.difficulty);
-                const action = filtered[Math.floor(Math.random() * filtered.length)];
-            
-                // Envoyer à tous les joueurs
-                players.forEach(p => p.send(JSON.stringify({ type: 'action-drawn', action })));
-                // Notification
-                players.forEach(p => p.send(JSON.stringify({ type: 'notification', msg: `${ws.playerData.name} a tiré une action !` })));
-                break;
+    ws.playerData = {
+        name: "",
+        roomCode: "",
+        points: 0
+    };
 
-            case 'complete-action':
-                ws.playerData.points += data.points;
-                ws.send(JSON.stringify({ type: 'points-updated', points: ws.playerData.points }));
-                // Notification globale
-                players.forEach(p => p.send(JSON.stringify({ type: 'notification', msg: `${ws.playerData.name} a complété une action et gagné ${data.points} points !` })));
-                broadcastLeaderboard();
-                break;
+    ws.on('message', (msg) => {
+        const data = JSON.parse(msg);
 
-            case 'buy-gift':
-                const gift = gifts.find(g => g.id === data.giftId);
-                if (gift && ws.playerData.points >= gift.cost) {
-                    ws.playerData.points -= gift.cost;
-                    ws.send(JSON.stringify({ type: 'gift-bought', gift, points: ws.playerData.points }));
-                    players.forEach(p => p.send(JSON.stringify({ type: 'notification', msg: `${ws.playerData.name} a acheté ${gift.name} !` })));
-                } else {
-                    ws.send(JSON.stringify({ type: 'gift-failed', msg: "Pas assez de points !" }));
-                }
-                broadcastLeaderboard();
-                break;
+        // ======================
+        // CREATE ROOM
+        // ======================
+        if (data.type === "create-room") {
+            const code = generateRoomCode();
 
-            case 'set-name':
-                ws.playerData.name = data.name || ws.playerData.name;
-                broadcastLeaderboard();
-                break;
+            rooms[code] = {
+                players: [ws],
+                currentTurn: 0,
+                mode: data.mode,
+                totalPoints: 0
+            };
+
+            ws.playerData.name = data.name;
+            ws.playerData.roomCode = code;
+
+            ws.send(JSON.stringify({ type: "room-created", code }));
         }
+
+        // ======================
+        // JOIN ROOM
+        // ======================
+        if (data.type === "join-room") {
+            const room = rooms[data.code];
+
+            if (!room) {
+                ws.send(JSON.stringify({ type: "error", message: "Salle introuvable" }));
+                return;
+            }
+
+            if (room.players.length >= 2) {
+                ws.send(JSON.stringify({ type: "error", message: "Salle pleine" }));
+                return;
+            }
+
+            ws.playerData.name = data.name;
+            ws.playerData.roomCode = data.code;
+
+            room.players.push(ws);
+
+            broadcastRoom(data.code, {
+                type: "game-start",
+                players: room.players.map(p => p.playerData.name),
+                currentTurn: room.players[room.currentTurn].playerData.name
+            });
+        }
+
+        // ======================
+        // DRAW ACTION
+        // ======================
+        if (data.type === "draw-action") {
+            const room = rooms[ws.playerData.roomCode];
+
+            if (room.players[room.currentTurn] !== ws) return;
+
+            const filtered = actions.filter(a => a.difficulty === data.difficulty);
+            const action = filtered[Math.floor(Math.random() * filtered.length)];
+
+            ws.currentAction = action;
+
+            ws.send(JSON.stringify({
+                type: "action-drawn",
+                action
+            }));
+
+            broadcastRoom(ws.playerData.roomCode, {
+                type: "notification",
+                message: `${ws.playerData.name} a tiré une action`
+            });
+        }
+
+        // ======================
+        // COMPLETE ACTION
+        // ======================
+        if (data.type === "complete-action") {
+            const room = rooms[ws.playerData.roomCode];
+
+            if (!ws.currentAction) return;
+
+            if (room.mode === "coop") {
+                room.totalPoints += ws.currentAction.points;
+            } else {
+                ws.playerData.points += ws.currentAction.points;
+            }
+
+            ws.currentAction = null;
+
+            nextTurn(ws.playerData.roomCode);
+
+            broadcastRoom(ws.playerData.roomCode, {
+                type: "update",
+                totalPoints: room.totalPoints,
+                players: room.players.map(p => ({
+                    name: p.playerData.name,
+                    points: p.playerData.points
+                })),
+                currentTurn: room.players[room.currentTurn].playerData.name
+            });
+        }
+
     });
 
     ws.on('close', () => {
-        players = players.filter(p => p !== ws);
-        broadcastLeaderboard();
-    });
+        const code = ws.playerData.roomCode;
+        if (!code || !rooms[code]) return;
 
+        rooms[code].players = rooms[code].players.filter(p => p !== ws);
+
+        if (rooms[code].players.length === 0) {
+            delete rooms[code];
+        }
+    });
 });
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log("Server running on port " + PORT));
