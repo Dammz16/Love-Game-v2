@@ -1,96 +1,142 @@
-const ws = new WebSocket(`ws://${location.host}`);
-let currentAction = null;
+const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
-const pointsEl = document.getElementById('points');
-const currentActionEl = document.getElementById('currentAction');
-const notifEl = document.getElementById('notifications');
-const leaderboardEl = document.getElementById('leaderboard');
-const nameInput = document.getElementById('nameInput');
+let playerName = "";
+let currentRoom = "";
+let currentTurn = "";
+let mode = "";
 
-function addNotification(msg, type="info") {
-    const p = document.createElement('p');
-    p.textContent = msg;
-    p.style.margin = "2px 0";
-    p.style.padding = "2px 5px";
-    p.style.borderRadius = "3px";
+// ======================
+// MENU ACTIONS
+// ======================
 
-    if(type === "error") p.style.backgroundColor = "#f44336";
-    else if(type === "success") p.style.backgroundColor = "#4CAF50";
-    else p.style.backgroundColor = "#e0e0e0";
+document.getElementById("createRoom").onclick = () => {
+    playerName = document.getElementById("playerName").value.trim();
+    mode = document.getElementById("mode").value;
 
-    notifEl.appendChild(p);
-    notifEl.scrollTop = notifEl.scrollHeight;
-}
+    if (!playerName) {
+        document.getElementById("menuError").innerText = "Entre ton prénom";
+        return;
+    }
 
-function updateLeaderboard(list) {
-    leaderboardEl.innerHTML = '';
-    list.sort((a,b) => b.points - a.points)
-        .forEach(p => {
-            const li = document.createElement('li');
-            li.textContent = `${p.name} : ${p.points} points`;
-            if (p.name === nameInput.value.trim()) li.style.fontWeight = "bold";
-            leaderboardEl.appendChild(li);
-        });
-}
+    ws.send(JSON.stringify({
+        type: "create-room",
+        name: playerName,
+        mode: mode
+    }));
+};
 
-// Gestion WebSocket
+document.getElementById("joinRoom").onclick = () => {
+    playerName = document.getElementById("playerName").value.trim();
+    const code = document.getElementById("roomCode").value.trim().toUpperCase();
+
+    if (!playerName || !code) {
+        document.getElementById("menuError").innerText = "Nom + code requis";
+        return;
+    }
+
+    ws.send(JSON.stringify({
+        type: "join-room",
+        name: playerName,
+        code: code
+    }));
+};
+
+// ======================
+// GAME ACTIONS
+// ======================
+
+document.getElementById("drawBtn").onclick = () => {
+    const difficulty = document.getElementById("difficulty").value;
+
+    if (currentTurn !== playerName) {
+        alert("Ce n'est pas ton tour !");
+        return;
+    }
+
+    ws.send(JSON.stringify({
+        type: "draw-action",
+        difficulty: difficulty
+    }));
+};
+
+document.getElementById("completeBtn").onclick = () => {
+    ws.send(JSON.stringify({
+        type: "complete-action"
+    }));
+
+    document.getElementById("completeBtn").classList.add("hidden");
+    document.getElementById("currentAction").innerText = "";
+};
+
+// ======================
+// WEBSOCKET MESSAGES
+// ======================
+
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
-    switch(data.type) {
-        case 'connected': console.log(data.msg); break;
-        case 'action-drawn':
-            currentAction = data.action;
-            currentActionEl.textContent = `Action à faire : ${currentAction.name} (${currentAction.points} points)`;
-            break;
-        case 'points-updated': pointsEl.textContent = data.points; break;
-        case 'gift-bought':
-            pointsEl.textContent = data.points;
-            addNotification(`Vous avez acheté : ${data.gift.name}`, "success");
-            break;
-        case 'gift-failed': addNotification(data.msg, "error"); break;
-        case 'leaderboard': updateLeaderboard(data.leaderboard); break;
-        case 'notification': addNotification(data.msg); break;
+    // Room created
+    if (data.type === "room-created") {
+        currentRoom = data.code;
+        document.getElementById("roomDisplay").innerText = "Salle : " + currentRoom;
+        document.getElementById("menu").style.display = "none";
+        document.getElementById("game").style.display = "block";
+    }
+
+    // Game start
+    if (data.type === "game-start") {
+        document.getElementById("notification").innerText = "Partie commencée !";
+        updateScores(data.players.map(name => ({ name, points: 0 })));
+        currentTurn = data.currentTurn;
+        updateTurnDisplay();
+    }
+
+    // Action drawn
+    if (data.type === "action-drawn") {
+        document.getElementById("currentAction").innerText =
+            data.action.name + " (+ " + data.action.points + " pts)";
+        document.getElementById("completeBtn").classList.remove("hidden");
+    }
+
+    // Notification
+    if (data.type === "notification") {
+        document.getElementById("notification").innerText = data.message;
+    }
+
+    // Update scores
+    if (data.type === "update") {
+        currentTurn = data.currentTurn;
+        updateTurnDisplay();
+        updateScores(data.players);
+
+        if (data.totalPoints !== undefined && data.totalPoints > 0) {
+            document.getElementById("coopTotal").innerText =
+                "Score total équipe : " + data.totalPoints;
+        }
+    }
+
+    // Error
+    if (data.type === "error") {
+        document.getElementById("menuError").innerText = data.message;
     }
 };
 
-// Tirer action
-document.getElementById('drawBtn').addEventListener('click', () => {
-    const difficulty = document.getElementById('difficulty').value;
-    ws.send(JSON.stringify({ type: 'draw-action', difficulty }));
-});
+// ======================
+// UI HELPERS
+// ======================
 
-// Compléter action
-document.getElementById('completeBtn').addEventListener('click', () => {
-    if(currentAction){
-        ws.send(JSON.stringify({ type: 'complete-action', points: currentAction.points }));
-        currentAction = null;
-        currentActionEl.textContent = '';
-    }
-});
+function updateTurnDisplay() {
+    document.getElementById("currentTurn").innerText =
+        "Tour de : " + currentTurn;
+}
 
-// Charger cadeaux
-fetch('/api/gifts')
-    .then(res => res.json())
-    .then(gifts => {
-        const select = document.getElementById('gifts');
-        gifts.forEach(g => {
-            const opt = document.createElement('option');
-            opt.value = g.id;
-            opt.textContent = `${g.name} (${g.cost} points)`;
-            select.appendChild(opt);
-        });
+function updateScores(players) {
+    const list = document.getElementById("scoreList");
+    list.innerHTML = "";
+
+    players.forEach(p => {
+        const li = document.createElement("li");
+        li.innerText = p.name + " : " + (p.points || 0) + " pts";
+        list.appendChild(li);
     });
-
-// Acheter cadeau
-document.getElementById('buyGiftBtn').addEventListener('click', () => {
-    const giftId = parseInt(document.getElementById('gifts').value);
-    ws.send(JSON.stringify({ type: 'buy-gift', giftId }));
-});
-
-// Saisie pseudo
-document.getElementById('nameBtn').addEventListener('click', () => {
-    const name = nameInput.value.trim();
-    if(name) ws.send(JSON.stringify({ type: 'set-name', name }));
-
-});
+}
