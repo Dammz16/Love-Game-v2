@@ -9,14 +9,54 @@
         #game { display: none; }
         #notification { color: green; margin: 10px; }
         #currentTurn { font-weight: bold; margin: 10px; }
-        #scores { margin-top: 20px; }
+#scores {
+    margin-top: 30px;
+    font-size: 20px;
+}
+
+#scoreList li {
+    list-style: none;
+    margin: 8px;
+    padding: 8px;
+    background: #eee;
+    border-radius: 8px;
+}
         .hidden { display: none; }
-        #currentAction {
+#currentAction {
     font-size: 26px;
-    margin: 30px;
-    padding: 20px;
-    border-radius: 12px;
-    background: #f3f3f3;
+    margin: 30px auto;
+    padding: 25px;
+    border-radius: 16px;
+    background: #f5f5f5;
+    max-width: 320px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+}
+        button {
+    font-size: 18px;
+    padding: 16px 24px;
+    border-radius: 10px;
+    border: none;
+    background: #4CAF50;
+    color: white;
+    margin: 10px;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+        #currentAction {
+    animation: pop 0.3s ease;
+}
+
+@keyframes pop {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
     </style>
 </head>
@@ -33,5 +73,6 @@
 <script src="frontend.js"></script>
 </body>
 </html>
+
 
 
