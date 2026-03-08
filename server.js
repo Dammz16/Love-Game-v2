@@ -109,36 +109,6 @@ wss.on('connection', (ws) => {
                 message: `${ws.playerData.name} a tiré une action`
             });
         }
-
-        // ======================
-        // COMPLETE ACTION
-        // ======================
-        if (data.type === "complete-action") {
-            const room = rooms[ws.playerData.roomCode];
-
-            if (!ws.currentAction) return;
-
-            if (room.mode === "coop") {
-                room.totalPoints += ws.currentAction.points;
-            } else {
-                ws.playerData.points += ws.currentAction.points;
-            }
-
-            ws.currentAction = null;
-
-            nextTurn(ws.playerData.roomCode);
-
-            broadcastRoom(ws.playerData.roomCode, {
-                type: "update",
-                totalPoints: room.totalPoints,
-                players: room.players.map(p => ({
-                    name: p.playerData.name,
-                    points: p.playerData.points
-                })),
-                currentTurn: room.players[room.currentTurn].playerData.name
-            });
-        }
-
     });
 
     ws.on('close', () => {
@@ -155,3 +125,4 @@ wss.on('connection', (ws) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log("Server running on port " + PORT));
+
