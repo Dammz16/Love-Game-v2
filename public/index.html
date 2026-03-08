@@ -1,16 +1,69 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Jeu 1 contre 1</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: Arial; text-align: center; padding: 20px; }
-        button { padding: 10px; margin: 5px; }
-        #game { display: none; }
-        #notification { color: green; margin: 10px; }
-        #currentTurn { font-weight: bold; margin: 10px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duel 1vs1</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f0f0f0;
+    margin: 0;
+    padding: 0;
+}
+
+#menu, #game {
+    margin-top: 50px;
+}
+
+input, select, button {
+    font-size: 18px;
+    padding: 12px;
+    margin: 10px;
+    border-radius: 10px;
+}
+
+button {
+    border: none;
+    background: #4CAF50;
+    color: white;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+#currentAction {
+    font-size: 24px;
+    margin: 30px auto;
+    padding: 25px;
+    border-radius: 16px;
+    max-width: 320px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+#currentAction.easy {
+    background-color: #d4edda;
+}
+
+#currentAction.medium {
+    background-color: #fff3cd;
+}
+
+#currentAction.hard {
+    background-color: #f8d7da;
+}
+
+#notification {
+    font-size: 18px;
+    margin: 10px;
+    min-height: 24px;
+}
+
 #scores {
-    margin-top: 30px;
+    margin-top: 20px;
     font-size: 20px;
 }
 
@@ -21,58 +74,55 @@
     background: #eee;
     border-radius: 8px;
 }
-        .hidden { display: none; }
-#currentAction {
-    font-size: 26px;
-    margin: 30px auto;
-    padding: 25px;
-    border-radius: 16px;
-    background: #f5f5f5;
-    max-width: 320px;
-    box-shadow: 0 6px 14px rgba(0,0,0,0.1);
-}
-        button {
-    font-size: 18px;
-    padding: 16px 24px;
-    border-radius: 10px;
-    border: none;
-    background: #4CAF50;
-    color: white;
-    margin: 10px;
-}
-
-button:active {
-    transform: scale(0.97);
-}
-        #currentAction {
-    animation: pop 0.3s ease;
-}
-
-@keyframes pop {
-    from {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-    </style>
+</style>
 </head>
 <body>
 
-<h1>🎮 Duel</h1>
-
 <div id="menu">
+    <h1>🎮 Duel 1vs1</h1>
     <input type="text" id="playerName" placeholder="Ton prénom">
     <button id="joinGame">Rejoindre la partie</button>
-    <p id="menuError"></p>
+    <p id="menuError" style="color:red"></p>
+</div>
+
+<div id="game" style="display:none;">
+    <h2 id="currentTurn">Tour de :</h2>
+    
+    <select id="difficulty">
+        <option value="easy">Facile</option>
+        <option value="medium">Moyen</option>
+        <option value="hard">Difficile</option>
+    </select>
+    <button id="drawBtn">Tirer une action</button>
+
+    <div id="currentAction"></div>
+    <button id="completeBtn" class="hidden">Valider</button>
+
+    <div id="notification"></div>
+
+    <div id="scores">
+        <h3>Scores</h3>
+        <ul id="scoreList"></ul>
+    </div>
 </div>
 
 <script src="frontend.js"></script>
+<script>
+/* ===== Ajouter la couleur selon difficulté ===== */
+const currentActionDiv = document.getElementById("currentAction");
+
+const observer = new MutationObserver(() => {
+    const text = currentActionDiv.innerText.toLowerCase();
+    currentActionDiv.classList.remove("easy", "medium", "hard");
+    if (text.includes("facile")) currentActionDiv.classList.add("easy");
+    else if (text.includes("moyen")) currentActionDiv.classList.add("medium");
+    else if (text.includes("difficile")) currentActionDiv.classList.add("hard");
+    // animation pop
+    currentActionDiv.style.transform = "scale(0.95)";
+    setTimeout(() => { currentActionDiv.style.transform = "scale(1)"; }, 150);
+});
+observer.observe(currentActionDiv, { childList: true, subtree: true });
+</script>
+
 </body>
 </html>
-
-
-
