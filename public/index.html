@@ -28,6 +28,7 @@ button {
     border: none;
     background: #4CAF50;
     color: white;
+    cursor: pointer;
 }
 
 button:active {
@@ -74,6 +75,18 @@ button:active {
     background: #eee;
     border-radius: 8px;
 }
+
+#replayBtn {
+    display: none;
+    font-size:18px;
+    padding:12px 24px;
+    margin-top:20px;
+    border-radius:10px;
+    background:#2196F3;
+    color:white;
+    cursor:pointer;
+}
+#replayBtn:active { transform: scale(0.97); }
 </style>
 </head>
 <body>
@@ -104,11 +117,13 @@ button:active {
         <h3>Scores</h3>
         <ul id="scoreList"></ul>
     </div>
+
+    <button id="replayBtn">Rejouer</button>
 </div>
 
 <script src="frontend.js"></script>
 <script>
-/* ===== Ajouter la couleur selon difficulté ===== */
+/* ===== Ajouter la couleur selon difficulté et animation pop ===== */
 const currentActionDiv = document.getElementById("currentAction");
 
 const observer = new MutationObserver(() => {
@@ -117,7 +132,7 @@ const observer = new MutationObserver(() => {
     if (text.includes("facile")) currentActionDiv.classList.add("easy");
     else if (text.includes("moyen")) currentActionDiv.classList.add("medium");
     else if (text.includes("difficile")) currentActionDiv.classList.add("hard");
-    // animation pop
+
     currentActionDiv.style.transform = "scale(0.95)";
     setTimeout(() => { currentActionDiv.style.transform = "scale(1)"; }, 150);
 });
