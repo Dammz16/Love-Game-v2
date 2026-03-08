@@ -59,21 +59,23 @@ wss.on('connection', (ws) => {
 
         }
 
-        // ===== DRAW ACTION =====
-        if (data.type === "draw-action") {
+// ===== DRAW ACTION =====
+if (data.type === "draw-action") {
 
-            if (players[currentTurn] !== ws) return;
+    if (players[currentTurn] !== ws) return;
 
-            const filtered = actions.filter(a => a.difficulty === data.difficulty);
-            const action = filtered[Math.floor(Math.random() * filtered.length)];
+    const filtered = actions.filter(a => a.difficulty === data.difficulty);
+    const action = filtered[Math.floor(Math.random() * filtered.length)];
 
-            ws.currentAction = action;
+    ws.currentAction = action;
 
-            ws.send(JSON.stringify({
-                type: "action-drawn",
-                action
-            }));
+    broadcast({
+        type: "action-drawn",
+        player: ws.playerData.name,
+        action
+    });
 
+}
             broadcast({
                 type: "notification",
                 message: `${ws.playerData.name} a tiré une action`
@@ -118,3 +120,4 @@ wss.on('connection', (ws) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log("Server running on port " + PORT));
+
