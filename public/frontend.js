@@ -61,11 +61,20 @@ ws.onmessage = (event) => {
         document.getElementById("notification").innerText = "Partie commencée !";
     }
 
-    if (data.type === "action-drawn") {
-        document.getElementById("currentAction").innerText =
-            data.action.name + " (+ " + data.action.points + " pts)";
+if (data.type === "action-drawn") {
+
+    document.getElementById("currentAction").innerText =
+        data.player + " doit faire : " +
+        data.action.name +
+        " (+" + data.action.points + " pts)";
+
+    if (data.player === playerName) {
         document.getElementById("completeBtn").classList.remove("hidden");
+    } else {
+        document.getElementById("completeBtn").classList.add("hidden");
     }
+
+}
 
     if (data.type === "notification") {
         document.getElementById("notification").innerText = data.message;
@@ -96,4 +105,5 @@ function updateScores(players) {
         list.appendChild(li);
     });
 }
+
 
