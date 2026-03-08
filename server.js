@@ -14,10 +14,12 @@ const actions = JSON.parse(fs.readFileSync('./data/actions.json'));
 let players = [];
 let currentTurn = 0;
 
+// Fonction pour envoyer un message à tous les joueurs
 function broadcast(message) {
     players.forEach(p => p.send(JSON.stringify(message)));
 }
 
+// Passe au tour suivant
 function nextTurn() {
     currentTurn = (currentTurn + 1) % players.length;
 }
@@ -45,7 +47,6 @@ wss.on('connection', (ws) => {
             players.push(ws);
 
             if (players.length === 2) {
-
                 broadcast({
                     type: "game-start",
                     players: players.map(p => ({
@@ -54,33 +55,31 @@ wss.on('connection', (ws) => {
                     })),
                     currentTurn: players[currentTurn].playerData.name
                 });
-
             }
-
         }
 
-// ===== DRAW ACTION =====
-if (data.type === "draw-action") {
+        // ===== DRAW ACTION =====
+        if (data.type === "draw-action") {
 
-    if (players[currentTurn] !== ws) return;
+            if (players[currentTurn] !== ws) return;
 
-    const filtered = actions.filter(a => a.difficulty === data.difficulty);
-    const action = filtered[Math.floor(Math.random() * filtered.length)];
+            const filtered = actions.filter(a => a.difficulty === data.difficulty);
+            const action = filtered[Math.floor(Math.random() * filtered.length)];
 
-    ws.currentAction = action;
+            ws.currentAction = action;
 
-    broadcast({
-        type: "action-drawn",
-        player: ws.playerData.name,
-        action
-    });
+            // Envoie l'action à tous les joueurs
+            broadcast({
+                type: "action-drawn",
+                player: ws.playerData.name,
+                action: action
+            });
 
-}
+            // Notification informative
             broadcast({
                 type: "notification",
                 message: `${ws.playerData.name} a tiré une action`
             });
-
         }
 
         // ===== COMPLETE ACTION =====
@@ -101,23 +100,16 @@ if (data.type === "draw-action") {
                 })),
                 currentTurn: players[currentTurn].playerData.name
             });
-
         }
 
     });
 
     ws.on('close', () => {
-
         players = players.filter(p => p !== ws);
-
-        if (players.length === 0) {
-            currentTurn = 0;
-        }
-
+        if (players.length === 0) currentTurn = 0;
     });
 
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log("Server running on port " + PORT));
-
