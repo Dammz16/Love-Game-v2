@@ -47,11 +47,14 @@ ws.onmessage = (event) => {
     }
 
     if (data.type === "action-drawn") {
-        document.getElementById("currentAction").innerText =
-            data.player + " doit faire : " + data.action.name + " (+" + data.action.points + " pts)";
+        const actionText = `${data.player} doit faire : ${data.action.name} (+${data.action.points} pts)`;
+        const currentActionDiv = document.getElementById("currentAction");
+        currentActionDiv.innerText = actionText;
+        currentActionDiv.className = data.action.difficulty; // easy/medium/hard pour couleur
+        popCard();
+
         if (data.player === playerName) document.getElementById("completeBtn").classList.remove("hidden");
         else document.getElementById("completeBtn").classList.add("hidden");
-        popCard();
     }
 
     if (data.type === "notification") showNotification(data.message);
