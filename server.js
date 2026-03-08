@@ -9,114 +9,111 @@ app.use(express.static('public'));
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
-// Charger les actions depuis le fichier JSON
 const actions = JSON.parse(fs.readFileSync('./data/actions.json'));
 
-let rooms = {};
+let players = [];
+let currentTurn = 0;
 
-function generateRoomCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
+function broadcast(message) {
+    players.forEach(p => p.send(JSON.stringify(message)));
 }
 
-function broadcastRoom(roomCode, message) {
-    rooms[roomCode].players.forEach(player => {
-        player.send(JSON.stringify(message));
-    });
-}
-
-function nextTurn(roomCode) {
-    const room = rooms[roomCode];
-    room.currentTurn = (room.currentTurn + 1) % room.players.length;
+function nextTurn() {
+    currentTurn = (currentTurn + 1) % players.length;
 }
 
 wss.on('connection', (ws) => {
 
     ws.playerData = {
         name: "",
-        roomCode: "",
         points: 0
     };
 
     ws.on('message', (msg) => {
+
         const data = JSON.parse(msg);
 
-        // ===== CREER SALLE =====
-        if (data.type === "create-room") {
-            const code = generateRoomCode();
-            rooms[code] = { players: [ws], currentTurn: 0 };
-            ws.playerData.name = data.name;
-            ws.playerData.roomCode = code;
+        // ===== JOIN GAME =====
+        if (data.type === "join") {
 
-            ws.send(JSON.stringify({ type: "room-created", code }));
-        }
-
-        // ===== REJOINDRE SALLE =====
-        if (data.type === "join-room") {
-            const room = rooms[data.code];
-            if (!room) {
-                ws.send(JSON.stringify({ type: "error", message: "Salle introuvable" }));
-                return;
-            }
-            if (room.players.length >= 2) {
-                ws.send(JSON.stringify({ type: "error", message: "Salle pleine" }));
+            if (players.length >= 2) {
+                ws.send(JSON.stringify({ type: "error", message: "La partie est pleine" }));
                 return;
             }
 
             ws.playerData.name = data.name;
-            ws.playerData.roomCode = data.code;
-            room.players.push(ws);
+            players.push(ws);
 
-            // Commence le jeu
-            broadcastRoom(data.code, {
-                type: "game-start",
-                players: room.players.map(p => ({ name: p.playerData.name, points: p.playerData.points })),
-                currentTurn: room.players[room.currentTurn].playerData.name
-            });
+            if (players.length === 2) {
+
+                broadcast({
+                    type: "game-start",
+                    players: players.map(p => ({
+                        name: p.playerData.name,
+                        points: p.playerData.points
+                    })),
+                    currentTurn: players[currentTurn].playerData.name
+                });
+
+            }
+
         }
 
-        // ===== TIRER ACTION =====
+        // ===== DRAW ACTION =====
         if (data.type === "draw-action") {
-            const room = rooms[ws.playerData.roomCode];
-            if (room.players[room.currentTurn] !== ws) return;
+
+            if (players[currentTurn] !== ws) return;
 
             const filtered = actions.filter(a => a.difficulty === data.difficulty);
             const action = filtered[Math.floor(Math.random() * filtered.length)];
+
             ws.currentAction = action;
 
-            ws.send(JSON.stringify({ type: "action-drawn", action }));
+            ws.send(JSON.stringify({
+                type: "action-drawn",
+                action
+            }));
 
-            broadcastRoom(ws.playerData.roomCode, {
+            broadcast({
                 type: "notification",
-                message: `${ws.playerData.name} a tiré une action !`
+                message: `${ws.playerData.name} a tiré une action`
             });
+
         }
 
-        // ===== VALIDER ACTION =====
+        // ===== COMPLETE ACTION =====
         if (data.type === "complete-action") {
-            const room = rooms[ws.playerData.roomCode];
+
             if (!ws.currentAction) return;
 
             ws.playerData.points += ws.currentAction.points;
             ws.currentAction = null;
 
-            nextTurn(ws.playerData.roomCode);
+            nextTurn();
 
-            broadcastRoom(ws.playerData.roomCode, {
+            broadcast({
                 type: "update",
-                players: room.players.map(p => ({ name: p.playerData.name, points: p.playerData.points })),
-                currentTurn: room.players[room.currentTurn].playerData.name
+                players: players.map(p => ({
+                    name: p.playerData.name,
+                    points: p.playerData.points
+                })),
+                currentTurn: players[currentTurn].playerData.name
             });
+
         }
 
     });
 
     ws.on('close', () => {
-        const code = ws.playerData.roomCode;
-        if (!code || !rooms[code]) return;
 
-        rooms[code].players = rooms[code].players.filter(p => p !== ws);
-        if (rooms[code].players.length === 0) delete rooms[code];
+        players = players.filter(p => p !== ws);
+
+        if (players.length === 0) {
+            currentTurn = 0;
+        }
+
     });
+
 });
 
 const PORT = process.env.PORT || 3000;
