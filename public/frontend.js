@@ -43,7 +43,7 @@ ws.onmessage = (event) => {
     // Partie démarrée
     if (data.type === "game-start") {
         document.getElementById("menu").style.display = "none";
-        document.getElementById("game").style.display = "block");
+        document.getElementById("game").style.display = "block";
         updateScores(data.players);
         currentTurn = data.currentTurn;
         updateTurnDisplay();
@@ -80,6 +80,26 @@ ws.onmessage = (event) => {
         currentTurn = data.currentTurn;
         updateTurnDisplay();
         updateScores(data.players);
+    }
+
+    // Victoire
+    if (data.type === "victory") {
+        document.getElementById("currentAction").innerText = `${data.winner} a gagné ! 🏆`;
+        document.getElementById("notification").innerText = "Partie terminée !";
+
+        // Masquer les boutons action
+        document.getElementById("drawBtn").style.display = "none";
+        document.getElementById("completeBtn").style.display = "none";
+
+        // Afficher bouton Rejouer
+        const replayBtn = document.getElementById("replayBtn");
+        replayBtn.style.display = "inline-block";
+
+        updateScores(data.players);
+
+        replayBtn.onclick = () => {
+            window.location.reload(); // Relancer une nouvelle partie
+        };
     }
 
     // Erreur
