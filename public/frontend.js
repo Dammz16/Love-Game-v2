@@ -71,6 +71,15 @@ ws.onmessage = (event) => {
         currentTurn = data.currentTurn;
         updateTurnDisplay();
         updateScores(data.players);
+
+        if (data.clearAction) {
+            document.getElementById("currentAction").innerText = "";
+            document.getElementById("completeBtn").classList.add("hidden");
+        }
+
+        if (data.notification) {
+            document.getElementById("notification").innerText = data.notification;
+        }
     }
 
     if (data.type === "victory") {
