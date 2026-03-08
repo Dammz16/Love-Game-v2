@@ -6,33 +6,43 @@
 <title>Duel 1vs1 Moderne</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: #fff;
-    text-align: center;
+html, body {
+    height: 100%; /* pour que le fond couvre toute la fenêtre */
     margin: 0;
     padding: 0;
 }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2); /* dégradé diagonal */
+    color: #fff;
+    text-align: center;
+    min-height: 100vh;
+}
+
 input, select, button {
     font-size: 18px;
     padding: 12px;
     margin: 10px;
     border-radius: 12px;
 }
+
 button {
     border: none;
     cursor: pointer;
     font-weight: 600;
     transition: transform 0.15s, box-shadow 0.15s;
 }
+
 button:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 20px rgba(0,0,0,0.3);
 }
+
 #menu, #game {
     margin-top: 50px;
 }
+
 #currentAction {
     background: rgba(255,255,255,0.1);
     padding: 30px;
@@ -43,9 +53,11 @@ button:hover {
     font-size: 1.3rem;
     transition: transform 0.3s, background 0.3s;
 }
+
 #currentAction.easy { background: rgba(72,187,120,0.8); }
 #currentAction.medium { background: rgba(250,204,21,0.8); }
 #currentAction.hard { background: rgba(231,76,60,0.8); }
+
 #notification {
     position: fixed;
     top: 20px;
@@ -58,22 +70,35 @@ button:hover {
     opacity: 0;
     transition: opacity 0.3s, transform 0.3s;
 }
+
 #notification.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* ===== Scores horizontaux ===== */
 #scores { margin-top: 20px; font-size: 20px; }
+#scoreList {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+}
 #scoreList li {
-    display: inline-block;
+    list-style: none;
     background: rgba(255,255,255,0.1);
     color: #fff;
     padding: 10px 20px;
-    margin: 6px;
     border-radius: 12px;
     font-weight: 600;
+    min-width: 120px;
+    text-align: center;
     transition: transform 0.2s;
 }
 #scoreList li.update { transform: scale(1.2); }
+
+/* ===== Bouton Rejouer ===== */
 #replayBtn {
     display: none;
     background: #ff6b6b;
@@ -86,6 +111,18 @@ button:hover {
 }
 #replayBtn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
 .hidden { display:none; }
+
+/* ===== Menu Error / attente joueur ===== */
+#menuError {
+    color: #000; /* noir */
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 10px;
+    background: rgba(255,255,255,0.6);
+    padding: 6px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
 </style>
 </head>
 <body>
@@ -94,7 +131,7 @@ button:hover {
     <h1>🎮 Duel 1vs1 Moderne</h1>
     <input type="text" id="playerName" placeholder="Ton prénom">
     <button id="joinGame">Rejoindre la partie</button>
-    <p id="menuError" style="color:red"></p>
+    <p id="menuError"></p>
 </div>
 
 <div id="game" style="display:none;">
