@@ -1,17 +1,9 @@
 const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
 let playerName = "";
-let currentRoom = "";
 let currentTurn = "";
 
 // ===== MENU =====
-document.getElementById("createRoom").onclick = () => {
-    playerName = document.getElementById("playerName").value.trim();
-    if (!playerName) { document.getElementById("menuError").innerText = "Entre ton prénom"; return; }
-
-    ws.send(JSON.stringify({ type: "create-room", name: playerName }));
-};
-
 document.getElementById("joinGame").onclick = () => {
 
     playerName = document.getElementById("playerName").value.trim();
@@ -45,13 +37,7 @@ document.getElementById("completeBtn").onclick = () => {
 ws.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
-    if (data.type === "room-created") {
-        currentRoom = data.code;
-        document.getElementById("roomDisplay").innerText = "Salle : " + currentRoom;
-        document.getElementById("menu").style.display = "none";
-        document.getElementById("game").style.display = "block";
-    }
-
+    // Partie démarrée
     if (data.type === "game-start") {
         document.getElementById("menu").style.display = "none";
         document.getElementById("game").style.display = "block";
@@ -61,31 +47,33 @@ ws.onmessage = (event) => {
         document.getElementById("notification").innerText = "Partie commencée !";
     }
 
-if (data.type === "action-drawn") {
+    // Action tirée
+    if (data.type === "action-drawn") {
+        document.getElementById("currentAction").innerText =
+            data.player + " doit faire : " +
+            data.action.name +
+            " (+" + data.action.points + " pts)";
 
-    document.getElementById("currentAction").innerText =
-        data.player + " doit faire : " +
-        data.action.name +
-        " (+" + data.action.points + " pts)";
-
-    if (data.player === playerName) {
-        document.getElementById("completeBtn").classList.remove("hidden");
-    } else {
-        document.getElementById("completeBtn").classList.add("hidden");
+        if (data.player === playerName) {
+            document.getElementById("completeBtn").classList.remove("hidden");
+        } else {
+            document.getElementById("completeBtn").classList.add("hidden");
+        }
     }
 
-}
-
+    // Notification simple
     if (data.type === "notification") {
         document.getElementById("notification").innerText = data.message;
     }
 
+    // Mise à jour des scores et tour
     if (data.type === "update") {
         currentTurn = data.currentTurn;
         updateTurnDisplay();
         updateScores(data.players);
     }
 
+    // Erreur
     if (data.type === "error") {
         document.getElementById("menuError").innerText = data.message;
     }
@@ -105,5 +93,3 @@ function updateScores(players) {
         list.appendChild(li);
     });
 }
-
-
