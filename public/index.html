@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Jeu Multijoueur V2</title>
+    <title>Jeu 1 contre 1</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body { font-family: Arial; text-align: center; padding: 20px; }
@@ -15,59 +15,44 @@
 </head>
 <body>
 
-    <h1>🎮 Jeu Multijoueur V2</h1>
+<h1>🎮 Jeu 1 contre 1</h1>
 
-    <!-- ====================== -->
-    <!-- MENU -->
-    <!-- ====================== -->
+<div id="menu">
+    <input type="text" id="playerName" placeholder="Ton prénom">
+    <h3>Créer une salle</h3>
+    <button id="createRoom">Créer</button>
 
-    <div id="menu">
-        <input type="text" id="playerName" placeholder="Ton prénom">
+    <h3>Rejoindre une salle</h3>
+    <input type="text" id="roomCode" placeholder="Code salle">
+    <button id="joinRoom">Rejoindre</button>
 
-        <h3>Créer une salle</h3>
-        <select id="mode">
-            <option value="coop">Coopératif</option>
-            <option value="versus">Compétitif</option>
+    <p id="menuError" style="color:red;"></p>
+</div>
+
+<div id="game">
+    <h2 id="roomDisplay"></h2>
+    <div id="currentTurn"></div>
+
+    <div id="drawSection">
+        <select id="difficulty">
+            <option value="easy">Facile</option>
+            <option value="medium">Moyen</option>
+            <option value="hard">Difficile</option>
         </select>
-        <button id="createRoom">Créer</button>
-
-        <h3>Rejoindre une salle</h3>
-        <input type="text" id="roomCode" placeholder="Code salle">
-        <button id="joinRoom">Rejoindre</button>
-
-        <p id="menuError" style="color:red;"></p>
+        <button id="drawBtn">Tirer une action</button>
     </div>
 
-    <!-- ====================== -->
-    <!-- GAME -->
-    <!-- ====================== -->
+    <h3 id="currentAction"></h3>
+    <button id="completeBtn" class="hidden">Valider l'action</button>
 
-    <div id="game">
-        <h2 id="roomDisplay"></h2>
+    <div id="notification"></div>
 
-        <div id="currentTurn"></div>
-
-        <div id="drawSection">
-            <select id="difficulty">
-                <option value="easy">Facile</option>
-                <option value="medium">Moyen</option>
-                <option value="hard">Difficile</option>
-            </select>
-            <button id="drawBtn">Tirer une action</button>
-        </div>
-
-        <h3 id="currentAction"></h3>
-        <button id="completeBtn" class="hidden">Valider l'action</button>
-
-        <div id="notification"></div>
-
-        <div id="scores">
-            <h3>Scores</h3>
-            <ul id="scoreList"></ul>
-            <h3 id="coopTotal"></h3>
-        </div>
+    <div id="scores">
+        <h3>Scores</h3>
+        <ul id="scoreList"></ul>
     </div>
+</div>
 
-    <script src="frontend.js"></script>
+<script src="frontend.js"></script>
 </body>
 </html>
