@@ -110,18 +110,6 @@ ws.onmessage = (event) => {
         document.getElementById("notification").innerText = data.message;
     }
 
-    // Update scores
-    if (data.type === "update") {
-        currentTurn = data.currentTurn;
-        updateTurnDisplay();
-        updateScores(data.players);
-
-        if (data.totalPoints !== undefined && data.totalPoints > 0) {
-            document.getElementById("coopTotal").innerText =
-                "Score total équipe : " + data.totalPoints;
-        }
-    }
-
     // Error
     if (data.type === "error") {
         document.getElementById("menuError").innerText = data.message;
@@ -147,4 +135,5 @@ function updateScores(players) {
         list.appendChild(li);
     });
 }
+
 
