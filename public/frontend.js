@@ -12,12 +12,19 @@ document.getElementById("createRoom").onclick = () => {
     ws.send(JSON.stringify({ type: "create-room", name: playerName }));
 };
 
-document.getElementById("joinRoom").onclick = () => {
-    playerName = document.getElementById("playerName").value.trim();
-    const code = document.getElementById("roomCode").value.trim().toUpperCase();
-    if (!playerName || !code) { document.getElementById("menuError").innerText = "Nom + code requis"; return; }
+document.getElementById("joinGame").onclick = () => {
 
-    ws.send(JSON.stringify({ type: "join-room", name: playerName, code }));
+    playerName = document.getElementById("playerName").value.trim();
+
+    if (!playerName) {
+        document.getElementById("menuError").innerText = "Entre ton prénom";
+        return;
+    }
+
+    ws.send(JSON.stringify({
+        type: "join",
+        name: playerName
+    }));
 };
 
 // ===== GAME =====
@@ -89,3 +96,4 @@ function updateScores(players) {
         list.appendChild(li);
     });
 }
+
