@@ -11,102 +11,103 @@ const wss = new WebSocketServer({ server });
 
 const actions = JSON.parse(fs.readFileSync('./data/actions.json'));
 
+// Tableau de joueurs : { name, ws, points, currentAction }
 let players = [];
 let currentTurn = 0;
 
-// Fonction pour envoyer un message à tous les joueurs
 function broadcast(message) {
-    players.forEach(p => p.send(JSON.stringify(message)));
+    players.forEach(p => {
+        if (p.ws && p.ws.readyState === 1) {
+            p.ws.send(JSON.stringify(message));
+        }
+    });
 }
 
-// Passe au tour suivant
 function nextTurn() {
     currentTurn = (currentTurn + 1) % players.length;
 }
 
 wss.on('connection', (ws) => {
 
-    ws.playerData = {
-        name: "",
-        points: 0
-    };
-
     ws.on('message', (msg) => {
-
         const data = JSON.parse(msg);
 
         // ===== JOIN GAME =====
         if (data.type === "join") {
 
-            if (players.length >= 2) {
-                ws.send(JSON.stringify({ type: "error", message: "La partie est pleine" }));
-                return;
+            // Vérifier si le joueur existe déjà
+            let existing = players.find(p => p.name === data.name);
+
+            if (existing) {
+                // Reconnexion : mettre à jour la WebSocket
+                existing.ws = ws;
+                ws.playerData = { name: existing.name, points: existing.points };
+            } else {
+                if (players.length >= 2) {
+                    ws.send(JSON.stringify({ type: "error", message: "La partie est pleine" }));
+                    return;
+                }
+                ws.playerData = { name: data.name, points: 0 };
+                players.push({ name: data.name, ws, points: 0, currentAction: null });
             }
 
-            ws.playerData.name = data.name;
-            players.push(ws);
-
+            // Démarrer la partie si 2 joueurs présents
             if (players.length === 2) {
                 broadcast({
                     type: "game-start",
-                    players: players.map(p => ({
-                        name: p.playerData.name,
-                        points: p.playerData.points
-                    })),
-                    currentTurn: players[currentTurn].playerData.name
+                    players: players.map(p => ({ name: p.name, points: p.points })),
+                    currentTurn: players[currentTurn].name
                 });
             }
         }
 
         // ===== DRAW ACTION =====
         if (data.type === "draw-action") {
-
-            if (players[currentTurn] !== ws) return;
+            const playerObj = players.find(p => p.ws === ws);
+            if (!playerObj || players[currentTurn].ws !== ws) return;
 
             const filtered = actions.filter(a => a.difficulty === data.difficulty);
             const action = filtered[Math.floor(Math.random() * filtered.length)];
 
-            ws.currentAction = action;
+            playerObj.currentAction = action;
 
-            // Envoie l'action à tous les joueurs
             broadcast({
                 type: "action-drawn",
-                player: ws.playerData.name,
+                player: playerObj.name,
                 action: action
             });
 
-            // Notification informative
             broadcast({
                 type: "notification",
-                message: `${ws.playerData.name} a tiré une action`
+                message: `${playerObj.name} a tiré une action`
             });
         }
 
         // ===== COMPLETE ACTION =====
         if (data.type === "complete-action") {
+            const playerObj = players.find(p => p.ws === ws);
+            if (!playerObj || !playerObj.currentAction) return;
 
-            if (!ws.currentAction) return;
-
-            ws.playerData.points += ws.currentAction.points;
-            ws.currentAction = null;
+            playerObj.points += playerObj.currentAction.points;
+            playerObj.currentAction = null;
 
             nextTurn();
 
             broadcast({
                 type: "update",
-                players: players.map(p => ({
-                    name: p.playerData.name,
-                    points: p.playerData.points
-                })),
-                currentTurn: players[currentTurn].playerData.name
+                players: players.map(p => ({ name: p.name, points: p.points })),
+                currentTurn: players[currentTurn].name
             });
         }
-
     });
 
     ws.on('close', () => {
-        players = players.filter(p => p !== ws);
-        if (players.length === 0) currentTurn = 0;
+        // On ne supprime pas le joueur pour permettre la reconnexion
+        // on met juste ws à null si le joueur se déconnecte
+        players.forEach(p => {
+            if (p.ws === ws) p.ws = null;
+        });
+        if (players.filter(p => p.ws !== null).length === 0) currentTurn = 0;
     });
 
 });
