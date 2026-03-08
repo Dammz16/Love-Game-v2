@@ -91,6 +91,16 @@ wss.on('connection', (ws) => {
             playerObj.points += playerObj.currentAction.points;
             playerObj.currentAction = null;
 
+            // Vérifier victoire (125 points)
+            if (playerObj.points >= 125) {
+                broadcast({
+                    type: "victory",
+                    winner: playerObj.name,
+                    players: players.map(p => ({ name: p.name, points: p.points }))
+                });
+                return; // Stopper le tour après victoire
+            }
+
             nextTurn();
 
             broadcast({
@@ -102,8 +112,7 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        // On ne supprime pas le joueur pour permettre la reconnexion
-        // on met juste ws à null si le joueur se déconnecte
+        // Ne pas supprimer le joueur pour permettre la reconnexion
         players.forEach(p => {
             if (p.ws === ws) p.ws = null;
         });
