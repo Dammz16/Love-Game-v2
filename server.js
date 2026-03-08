@@ -35,11 +35,10 @@ wss.on('connection', (ws) => {
         // ===== JOIN GAME =====
         if (data.type === "join") {
 
-            // Vérifier si le joueur existe déjà
             let existing = players.find(p => p.name === data.name);
 
             if (existing) {
-                // Reconnexion : mettre à jour la WebSocket
+                // Reconnexion
                 existing.ws = ws;
                 ws.playerData = { name: existing.name, points: existing.points };
             } else {
@@ -51,7 +50,6 @@ wss.on('connection', (ws) => {
                 players.push({ name: data.name, ws, points: 0, currentAction: null });
             }
 
-            // Démarrer la partie si 2 joueurs présents
             if (players.length === 2) {
                 broadcast({
                     type: "game-start",
@@ -91,14 +89,14 @@ wss.on('connection', (ws) => {
             playerObj.points += playerObj.currentAction.points;
             playerObj.currentAction = null;
 
-            // Vérifier victoire (125 points)
+            // Vérifier victoire
             if (playerObj.points >= 125) {
                 broadcast({
                     type: "victory",
                     winner: playerObj.name,
                     players: players.map(p => ({ name: p.name, points: p.points }))
                 });
-                return; // Stopper le tour après victoire
+                return;
             }
 
             nextTurn();
@@ -106,13 +104,14 @@ wss.on('connection', (ws) => {
             broadcast({
                 type: "update",
                 players: players.map(p => ({ name: p.name, points: p.points })),
-                currentTurn: players[currentTurn].name
+                currentTurn: players[currentTurn].name,
+                clearAction: true,
+                notification: `À ton tour, ${players[currentTurn].name} !`
             });
         }
     });
 
     ws.on('close', () => {
-        // Ne pas supprimer le joueur pour permettre la reconnexion
         players.forEach(p => {
             if (p.ws === ws) p.ws = null;
         });
