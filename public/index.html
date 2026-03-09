@@ -1,161 +1,226 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Duel 1vs1 Moderne</title>
+
+<title>Duel 1vs1</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
 <style>
-html, body {
-    height: 100%; /* pour que le fond couvre toute la fenêtre */
-    margin: 0;
-    padding: 0;
+
+html, body{
+height:100%;
+margin:0;
+font-family:'Poppins',sans-serif;
+background:linear-gradient(135deg,#667eea,#764ba2);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
 }
 
-body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #667eea, #764ba2); /* dégradé diagonal */
-    color: #fff;
-    text-align: center;
-    min-height: 100vh;
+/* MENU */
+
+#menu{
+background:rgba(255,255,255,0.12);
+padding:40px;
+border-radius:20px;
+backdrop-filter:blur(10px);
+box-shadow:0 15px 35px rgba(0,0,0,0.25);
+text-align:center;
 }
 
-input, select, button {
-    font-size: 18px;
-    padding: 12px;
-    margin: 10px;
-    border-radius: 12px;
+input{
+border:none;
+outline:none;
+padding:12px 16px;
+border-radius:12px;
+font-size:16px;
+width:200px;
+margin-right:10px;
 }
 
-button {
-    border: none;
-    cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.15s, box-shadow 0.15s;
+button{
+border:none;
+cursor:pointer;
+font-weight:600;
+background:#ff6b6b;
+color:white;
+padding:12px 22px;
+border-radius:12px;
+transition:all 0.2s ease;
 }
 
-button:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+button:hover{
+transform:translateY(-2px);
+box-shadow:0 10px 20px rgba(0,0,0,0.25);
 }
 
-#menu, #game {
-    margin-top: 50px;
+#menuError{
+color:black;
+font-weight:600;
+margin-top:12px;
+background:rgba(255,255,255,0.7);
+padding:6px 12px;
+border-radius:8px;
+display:inline-block;
 }
 
-#currentAction {
-    background: rgba(255,255,255,0.1);
-    padding: 30px;
-    border-radius: 20px;
-    margin: 30px auto;
-    max-width: 350px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    font-size: 1.3rem;
-    transition: transform 0.3s, background 0.3s;
+#menuError:empty{
+display:none;
 }
 
-#currentAction.easy { background: rgba(72,187,120,0.8); }
-#currentAction.medium { background: rgba(250,204,21,0.8); }
-#currentAction.hard { background: rgba(231,76,60,0.8); }
+/* GAME */
 
-#notification {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
-    padding: 12px 24px;
-    border-radius: 24px;
-    font-size: 1rem;
-    opacity: 0;
-    transition: opacity 0.3s, transform 0.3s;
+#game{
+display:none;
+text-align:center;
 }
 
-#notification.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
+#currentTurn{
+margin-top:10px;
 }
 
-/* ===== Scores horizontaux ===== */
-#scores { margin-top: 20px; font-size: 20px; }
-#scoreList {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    padding: 0;
-    margin: 0;
-}
-#scoreList li {
-    list-style: none;
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-weight: 600;
-    min-width: 120px;
-    text-align: center;
-    transition: transform 0.2s;
-}
-#scoreList li.update { transform: scale(1.2); }
+/* animation tour */
 
-/* ===== Bouton Rejouer ===== */
-#replayBtn {
-    display: none;
-    background: #ff6b6b;
-    color: white;
-    padding: 16px 32px;
-    font-size: 1.2rem;
-    border-radius: 24px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+@keyframes pulseTurn{
+0%{transform:scale(1);}
+50%{transform:scale(1.05);}
+100%{transform:scale(1);}
 }
-#replayBtn:hover { transform: scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
-.hidden { display:none; }
 
-/* ===== Menu Error / attente joueur ===== */
-#menuError {
-    color: #000; /* noir */
-    font-weight: 600;
-    font-size: 1rem;
-    margin-top: 10px;
-    background: rgba(255,255,255,0.6);
-    padding: 6px 12px;
-    border-radius: 8px;
-    display: inline-block;
+.myTurn{
+animation:pulseTurn 1s infinite;
+color:#ffe066;
 }
+
+/* carte action */
+
+.actionCard{
+background:rgba(255,255,255,0.12);
+padding:30px;
+border-radius:20px;
+margin:30px auto;
+max-width:360px;
+font-size:1.3rem;
+transform:rotateY(90deg);
+transition:transform 0.4s ease;
+}
+
+.actionCard.show{
+transform:rotateY(0deg);
+}
+
+/* scores */
+
+#scoreList{
+display:flex;
+justify-content:center;
+gap:12px;
+padding:0;
+}
+
+#scoreList li{
+list-style:none;
+background:rgba(255,255,255,0.12);
+padding:10px 20px;
+border-radius:12px;
+min-width:120px;
+}
+
+/* progress bar */
+
+.progressContainer{
+width:220px;
+margin:8px auto;
+}
+
+.progressBar{
+height:10px;
+background:rgba(255,255,255,0.25);
+border-radius:10px;
+overflow:hidden;
+}
+
+.progressFill{
+height:100%;
+background:#4ade80;
+width:0%;
+transition:width 0.4s ease;
+}
+
+/* notification */
+
+#notification{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+background:rgba(0,0,0,0.7);
+padding:12px 24px;
+border-radius:24px;
+opacity:0;
+transition:opacity 0.3s;
+}
+
+#notification.show{
+opacity:1;
+}
+
+#replayBtn{
+margin-top:20px;
+display:none;
+}
+
 </style>
+
 </head>
+
 <body>
 
 <div id="menu">
-    <h1>🎮 Duel 1vs1 Moderne</h1>
-    <input type="text" id="playerName" placeholder="Ton prénom">
-    <button id="joinGame">Rejoindre la partie</button>
-    <p id="menuError"></p>
+
+<h1>🎮 Duel 1vs1</h1>
+
+<input type="text" id="playerName" placeholder="Ton prénom">
+
+<button id="joinGame">Rejoindre la partie</button>
+
+<p id="menuError"></p>
+
 </div>
 
-<div id="game" style="display:none;">
-    <h2 id="currentTurn">Tour de :</h2>
-    <select id="difficulty">
-        <option value="easy">Facile</option>
-        <option value="medium">Moyen</option>
-        <option value="hard">Difficile</option>
-    </select>
-    <button id="drawBtn">Tirer une action</button>
+<div id="game">
 
-    <div id="currentAction"></div>
-    <button id="completeBtn" class="hidden">Valider</button>
+<h2 id="currentTurn"></h2>
 
-    <div id="notification"></div>
+<select id="difficulty">
+<option value="easy">Facile</option>
+<option value="medium">Moyen</option>
+<option value="hard">Difficile</option>
+</select>
 
-    <div id="scores">
-        <h3>Scores</h3>
-        <ul id="scoreList"></ul>
-    </div>
+<button id="drawBtn">Tirer une action</button>
 
-    <button id="replayBtn">Rejouer</button>
+<div id="currentAction" class="actionCard"></div>
+
+<button id="completeBtn" style="display:none;">Valider</button>
+
+<h3>Scores</h3>
+<ul id="scoreList"></ul>
+
+<div id="progressBars"></div>
+
+<button id="replayBtn">Rejouer</button>
+
+<div id="notification"></div>
+
 </div>
 
 <script src="frontend.js"></script>
+
 </body>
 </html>
