@@ -1,17 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Duel 1vs1</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 
-html, body{
+html,body{
 height:100%;
 margin:0;
 font-family:'Poppins',sans-serif;
@@ -59,6 +57,11 @@ transform:translateY(-2px);
 box-shadow:0 10px 20px rgba(0,0,0,0.25);
 }
 
+button:disabled{
+opacity:0.5;
+cursor:not-allowed;
+}
+
 #menuError{
 color:black;
 font-weight:600;
@@ -80,12 +83,6 @@ display:none;
 text-align:center;
 }
 
-#currentTurn{
-margin-top:10px;
-}
-
-/* animation tour */
-
 @keyframes pulseTurn{
 0%{transform:scale(1);}
 50%{transform:scale(1.05);}
@@ -97,8 +94,6 @@ animation:pulseTurn 1s infinite;
 color:#ffe066;
 }
 
-/* carte action */
-
 .actionCard{
 background:rgba(255,255,255,0.12);
 padding:30px;
@@ -106,12 +101,6 @@ border-radius:20px;
 margin:30px auto;
 max-width:360px;
 font-size:1.3rem;
-transform:rotateY(90deg);
-transition:transform 0.4s ease;
-}
-
-.actionCard.show{
-transform:rotateY(0deg);
 }
 
 /* scores */
@@ -131,7 +120,7 @@ border-radius:12px;
 min-width:120px;
 }
 
-/* progress bar */
+/* progress */
 
 .progressContainer{
 width:220px;
@@ -152,6 +141,41 @@ width:0%;
 transition:width 0.4s ease;
 }
 
+/* history */
+
+#historyList{
+list-style:none;
+padding:0;
+max-width:300px;
+margin:auto;
+}
+
+#historyList li{
+background:rgba(255,255,255,0.12);
+margin:6px 0;
+padding:8px;
+border-radius:8px;
+font-size:14px;
+}
+
+/* popup points */
+
+#pointsPopup{
+position:fixed;
+top:40%;
+left:50%;
+transform:translateX(-50%);
+font-size:40px;
+font-weight:bold;
+opacity:0;
+transition:opacity 0.5s, transform 0.5s;
+}
+
+#pointsPopup.show{
+opacity:1;
+transform:translate(-50%,-20px);
+}
+
 /* notification */
 
 #notification{
@@ -168,11 +192,6 @@ transition:opacity 0.3s;
 
 #notification.show{
 opacity:1;
-}
-
-#replayBtn{
-margin-top:20px;
-display:none;
 }
 
 </style>
@@ -214,7 +233,12 @@ display:none;
 
 <div id="progressBars"></div>
 
-<button id="replayBtn">Rejouer</button>
+<h3>Historique</h3>
+<ul id="historyList"></ul>
+
+<button id="rematchBtn" style="display:none;">Revanche</button>
+
+<div id="pointsPopup"></div>
 
 <div id="notification"></div>
 
