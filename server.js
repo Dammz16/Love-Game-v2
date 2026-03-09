@@ -1,124 +1,177 @@
-const express = require('express');
-const http = require('http');
-const { WebSocketServer } = require('ws');
-const fs = require('fs');
+const express=require("express");
+const http=require("http");
+const WebSocket=require("ws");
 
-const app = express();
-app.use(express.static('public'));
+const app=express();
+const server=http.createServer(app);
+const wss=new WebSocket.Server({server});
 
-const server = http.createServer(app);
-const wss = new WebSocketServer({ server });
+app.use(express.static("public"));
 
-const actions = JSON.parse(fs.readFileSync('./data/actions.json'));
+const victoryScore=125;
 
-// Tableau de joueurs : { name, ws, points, currentAction }
-let players = [];
-let currentTurn = 0;
+let players=[];
+let currentTurn=null;
+let history=[];
+let lastActions=[];
+let rematchVotes=0;
 
-function broadcast(message) {
-    players.forEach(p => {
-        if (p.ws && p.ws.readyState === 1) {
-            p.ws.send(JSON.stringify(message));
-        }
-    });
+const actions={
+easy:[
+{name:"10 squats",points:10},
+{name:"planche 15s",points:10}
+],
+medium:[
+{name:"15 pompes",points:20},
+{name:"30s planche",points:20}
+],
+hard:[
+{name:"20 burpees",points:30},
+{name:"1min planche",points:30}
+]
+};
+
+function broadcast(data){
+wss.clients.forEach(client=>{
+if(client.readyState===WebSocket.OPEN)
+client.send(JSON.stringify(data));
+});
 }
 
-function nextTurn() {
-    currentTurn = (currentTurn + 1) % players.length;
+function drawAction(list){
+
+let action;
+
+do{
+action=list[Math.floor(Math.random()*list.length)];
+}
+while(lastActions.includes(action.name));
+
+lastActions.push(action.name);
+
+if(lastActions.length>3)
+lastActions.shift();
+
+return action;
 }
 
-wss.on('connection', (ws) => {
+wss.on("connection",(ws)=>{
 
-    ws.on('message', (msg) => {
-        const data = JSON.parse(msg);
+ws.on("message",(message)=>{
 
-        // ===== JOIN GAME =====
-        if (data.type === "join") {
+const data=JSON.parse(message);
 
-            let existing = players.find(p => p.name === data.name);
+if(data.type==="join"){
 
-            if (existing) {
-                // Reconnexion
-                existing.ws = ws;
-                ws.playerData = { name: existing.name, points: existing.points };
-            } else {
-                if (players.length >= 2) {
-                    ws.send(JSON.stringify({ type: "error", message: "La partie est pleine" }));
-                    return;
-                }
-                ws.playerData = { name: data.name, points: 0 };
-                players.push({ name: data.name, ws, points: 0, currentAction: null });
-            }
+players.push({
+name:data.name,
+points:0,
+ws
+});
 
-            if (players.length === 2) {
-                broadcast({
-                    type: "game-start",
-                    players: players.map(p => ({ name: p.name, points: p.points })),
-                    currentTurn: players[currentTurn].name
-                });
-            }
-        }
+if(players.length===2){
 
-        // ===== DRAW ACTION =====
-        if (data.type === "draw-action") {
-            const playerObj = players.find(p => p.ws === ws);
-            if (!playerObj || players[currentTurn].ws !== ws) return;
+currentTurn=players[0].name;
 
-            const filtered = actions.filter(a => a.difficulty === data.difficulty);
-            const action = filtered[Math.floor(Math.random() * filtered.length)];
+broadcast({
+type:"game-start",
+players,
+currentTurn
+});
 
-            playerObj.currentAction = action;
+}
 
-            broadcast({
-                type: "action-drawn",
-                player: playerObj.name,
-                action: action
-            });
+}
 
-            broadcast({
-                type: "notification",
-                message: `${playerObj.name} a tiré une action`
-            });
-        }
+if(data.type==="draw-action"){
 
-        // ===== COMPLETE ACTION =====
-        if (data.type === "complete-action") {
-            const playerObj = players.find(p => p.ws === ws);
-            if (!playerObj || !playerObj.currentAction) return;
+if(currentTurn!==players.find(p=>p.ws===ws).name) return;
 
-            playerObj.points += playerObj.currentAction.points;
-            playerObj.currentAction = null;
+const action=drawAction(actions[data.difficulty]);
 
-            // Vérifier victoire
-            if (playerObj.points >= 125) {
-                broadcast({
-                    type: "victory",
-                    winner: playerObj.name,
-                    players: players.map(p => ({ name: p.name, points: p.points }))
-                });
-                return;
-            }
+broadcast({
+type:"action-drawn",
+player:currentTurn,
+action
+});
 
-            nextTurn();
+ws.currentAction=action;
 
-            broadcast({
-                type: "update",
-                players: players.map(p => ({ name: p.name, points: p.points })),
-                currentTurn: players[currentTurn].name,
-                clearAction: true,
-                notification: `À ton tour, ${players[currentTurn].name} !`
-            });
-        }
-    });
+}
 
-    ws.on('close', () => {
-        players.forEach(p => {
-            if (p.ws === ws) p.ws = null;
-        });
-        if (players.filter(p => p.ws !== null).length === 0) currentTurn = 0;
-    });
+if(data.type==="complete-action"){
+
+const player=players.find(p=>p.ws===ws);
+
+if(!ws.currentAction) return;
+
+player.points+=ws.currentAction.points;
+
+history.push(
+player.name+" : "+ws.currentAction.name+" (+"+ws.currentAction.points+")"
+);
+
+if(player.points>=victoryScore){
+
+broadcast({
+type:"victory",
+winner:player.name
+});
+
+return;
+
+}
+
+currentTurn=players.find(p=>p.name!==player.name).name;
+
+broadcast({
+type:"update",
+players,
+currentTurn,
+history
+});
+
+ws.currentAction=null;
+
+}
+
+if(data.type==="rematch"){
+
+rematchVotes++;
+
+if(rematchVotes===2){
+
+players.forEach(p=>p.points=0);
+
+history=[];
+lastActions=[];
+
+currentTurn=players[0].name;
+
+broadcast({
+type:"game-start",
+players,
+currentTurn
+});
+
+rematchVotes=0;
+
+}
+
+}
 
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("Server running on port " + PORT));
+ws.on("close",()=>{
+
+broadcast({
+type:"player-disconnected"
+});
+
+});
+
+});
+
+server.listen(3000,()=>{
+console.log("Server running on port 3000");
+});
