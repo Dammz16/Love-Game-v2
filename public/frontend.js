@@ -9,47 +9,41 @@ document.getElementById("joinGame").onclick = () => {
 playerName = document.getElementById("playerName").value.trim();
 
 if(!playerName){
-document.getElementById("menuError").innerText = "Entre ton prénom";
+document.getElementById("menuError").innerText="Entre ton prénom";
 return;
 }
 
-document.getElementById("joinGame").disabled = true;
-document.getElementById("menuError").innerText = "En attente de l’autre joueur…";
+document.getElementById("joinGame").disabled=true;
+document.getElementById("menuError").innerText="En attente de l’autre joueur…";
 
-ws.send(JSON.stringify({
-type:"join",
-name:playerName
-}));
+ws.send(JSON.stringify({type:"join",name:playerName}));
 
 };
 
-document.getElementById("drawBtn").onclick = () => {
+document.getElementById("drawBtn").onclick=()=>{
 
-const difficulty = document.getElementById("difficulty").value;
+const difficulty=document.getElementById("difficulty").value;
 
-if(currentTurn !== playerName){
+if(currentTurn!==playerName){
 showNotification("Ce n'est pas ton tour !");
 return;
 }
 
-ws.send(JSON.stringify({
-type:"draw-action",
-difficulty
-}));
+ws.send(JSON.stringify({type:"draw-action",difficulty}));
 
 };
 
-document.getElementById("completeBtn").onclick = () => {
-
-ws.send(JSON.stringify({
-type:"complete-action"
-}));
-
+document.getElementById("completeBtn").onclick=()=>{
+ws.send(JSON.stringify({type:"complete-action"}));
 };
 
-ws.onmessage = (event)=>{
+document.getElementById("rematchBtn").onclick=()=>{
+ws.send(JSON.stringify({type:"rematch"}));
+};
 
-const data = JSON.parse(event.data);
+ws.onmessage=(event)=>{
+
+const data=JSON.parse(event.data);
 
 if(data.type==="game-start"){
 
@@ -66,18 +60,13 @@ updateTurnDisplay();
 
 if(data.type==="action-drawn"){
 
-const card=document.getElementById("currentAction");
-
-card.classList.remove("show");
-
-card.innerText=data.player+" doit faire : "+data.action.name+" (+"+data.action.points+" pts)";
-
-setTimeout(()=>{
-card.classList.add("show");
-},50);
+document.getElementById("currentAction").innerText=
+data.player+" doit faire : "+data.action.name+" (+"+data.action.points+" pts)";
 
 if(data.player===playerName)
 document.getElementById("completeBtn").style.display="inline-block";
+
+showPoints(data.action.points);
 
 }
 
@@ -92,16 +81,25 @@ updateProgress(data.players);
 document.getElementById("currentAction").innerText="";
 document.getElementById("completeBtn").style.display="none";
 
+if(data.history)
+updateHistory(data.history);
+
 }
 
 if(data.type==="victory"){
 
 document.getElementById("currentAction").innerText=data.winner+" a gagné 🏆";
 
-document.getElementById("drawBtn").style.display="none";
-document.getElementById("completeBtn").style.display="none";
+document.getElementById("drawBtn").disabled=true;
 
-document.getElementById("replayBtn").style.display="inline-block";
+document.getElementById("rematchBtn").style.display="inline-block";
+
+}
+
+if(data.type==="player-disconnected"){
+
+showNotification("⚠️ Joueur déconnecté");
+document.getElementById("drawBtn").disabled=true;
 
 }
 
@@ -111,12 +109,19 @@ function updateTurnDisplay(){
 
 const turn=document.getElementById("currentTurn");
 
-turn.innerText="Tour de : "+currentTurn;
+if(currentTurn===playerName){
 
-if(currentTurn===playerName)
+turn.innerText="🟢 À ton tour !";
 turn.classList.add("myTurn");
-else
+document.getElementById("drawBtn").disabled=false;
+
+}else{
+
+turn.innerText="⏳ Tour de "+currentTurn;
 turn.classList.remove("myTurn");
+document.getElementById("drawBtn").disabled=true;
+
+}
 
 }
 
@@ -165,6 +170,38 @@ container.appendChild(div);
 
 }
 
+function updateHistory(history){
+
+const list=document.getElementById("historyList");
+
+list.innerHTML="";
+
+history.slice(-5).reverse().forEach(action=>{
+
+const li=document.createElement("li");
+
+li.innerText=action;
+
+list.appendChild(li);
+
+});
+
+}
+
+function showPoints(points){
+
+const popup=document.getElementById("pointsPopup");
+
+popup.innerText="+"+points+" pts";
+
+popup.classList.add("show");
+
+setTimeout(()=>{
+popup.classList.remove("show");
+},1000);
+
+}
+
 function showNotification(msg){
 
 const n=document.getElementById("notification");
@@ -173,8 +210,6 @@ n.innerText=msg;
 
 n.classList.add("show");
 
-setTimeout(()=>{
-n.classList.remove("show");
-},2500);
+setTimeout(()=>n.classList.remove("show"),2500);
 
 }
