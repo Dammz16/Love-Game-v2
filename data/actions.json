@@ -2,18 +2,24 @@
   "easy": [
     { "name": "10 squats", "points": 10 },
     { "name": "5 pompes", "points": 10 },
-    { "name": "planche 15s", "points": 10 }
+    { "name": "planche 15s", "points": 10 },
+    { "name": "10 jumping jacks", "points": 10 },
+    { "name": "5 fentes", "points": 10 }
   ],
 
   "medium": [
     { "name": "15 pompes", "points": 20 },
-    { "name": "30s planche", "points": 20 },
-    { "name": "20 squats", "points": 20 }
+    { "name": "30 secondes de planche", "points": 20 },
+    { "name": "20 squats", "points": 20 },
+    { "name": "20 jumping jacks", "points": 20 },
+    { "name": "10 burpees", "points": 20 }
   ],
 
   "hard": [
     { "name": "20 burpees", "points": 30 },
-    { "name": "1 min planche", "points": 30 },
-    { "name": "30 squats jump", "points": 30 }
+    { "name": "1 minute de planche", "points": 30 },
+    { "name": "30 squats jump", "points": 30 },
+    { "name": "25 pompes", "points": 30 },
+    { "name": "40 jumping jacks", "points": 30 }
   ]
 }
