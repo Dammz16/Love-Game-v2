@@ -1,6 +1,7 @@
 const express=require("express");
 const http=require("http");
 const WebSocket=require("ws");
+const fs = require("fs");
 
 const app=express();
 const server=http.createServer(app);
@@ -16,20 +17,9 @@ let history=[];
 let lastActions=[];
 let rematchVotes=0;
 
-const actions={
-easy:[
-{name:"10 squats",points:10},
-{name:"planche 15s",points:10}
-],
-medium:[
-{name:"15 pompes",points:20},
-{name:"30s planche",points:20}
-],
-hard:[
-{name:"20 burpees",points:30},
-{name:"1min planche",points:30}
-]
-};
+const actions = JSON.parse(
+  fs.readFileSync("./data/actions.json")
+);
 
 function broadcast(data){
 wss.clients.forEach(client=>{
