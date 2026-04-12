@@ -61,7 +61,7 @@ updateTurnDisplay();
 if(data.type==="action-drawn"){
 
 document.getElementById("currentAction").innerText=
-data.player+" doit faire : "+data.action.name+" (+"+data.action.points+" pts)";
+data.player+" doit "+data.action.name+" (+"+data.action.points+" pts)";
 
 if(data.player===playerName)
 document.getElementById("completeBtn").style.display="inline-block";
