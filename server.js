@@ -11,7 +11,6 @@ app.use(express.static("public"));
 
 const victoryScore = 125;
 
-// 👉 actions par catégorie
 const actions = JSON.parse(
 fs.readFileSync("./data/actions.json")
 );
@@ -22,13 +21,18 @@ fs.readFileSync("./data/actions.json")
 
 let players = [];
 let gameStarted = false;
+
 let currentTurn = null;
+
 let history = [];
+
 let lastActions = [];
+
 let rematchVotes = 0;
 
-// 👉 NOUVEAU : catégories sélectionnées
 let selectedCategories = [];
+
+let categoriesLocked = false;
 
 // ======================
 // UTILS
@@ -101,33 +105,37 @@ points:0,
 ws
 });
 
-if(players.length === 2 && !gameStarted){
+// START ROOM (mais pas jeu)
+if(players.length === 2){
 
 gameStarted = true;
-currentTurn = players[0].name;
 
 broadcast({
 type:"game-start",
 players,
-currentTurn
+currentTurn:null,
+needCategories:true
 });
 
 }
+
 }
 
 // ======================
-// SET CATEGORIES (NOUVEAU)
+// SET CATEGORIES (PHASE 2)
 // ======================
 
 if(data.type === "set-categories"){
 
 selectedCategories = data.categories || [];
+categoriesLocked = true;
 
-console.log("Catégories sélectionnées :", selectedCategories);
+currentTurn = players[0].name;
 
 broadcast({
-type:"categories-set",
-categories:selectedCategories
+type:"categories-confirmed",
+categories:selectedCategories,
+currentTurn
 });
 }
 
@@ -140,9 +148,40 @@ if(data.type === "draw-action"){
 const player = getPlayer(ws);
 if(!player) return;
 
+if(!categoriesLocked) return;
+
 if(currentTurn !== player.name) return;
 
-// 👉 pool basé sur catégories sélectionnées
+/* 🔥 RANDOM MODE */
+if(data.mode === "random"){
+
+const allActions = [];
+
+selectedCategories.forEach(cat=>{
+if(actions[cat]){
+allActions.push(...actions[cat]);
+}
+});
+
+if(allActions.length === 0) return;
+
+const action = drawAction(allActions);
+
+action.points = action.points * 2;
+
+ws.currentAction = action;
+
+broadcast({
+type:"action-drawn",
+player:player.name,
+action,
+mode:"random"
+});
+
+return;
+}
+
+/* 🟢 NORMAL MODE */
 let pool = [];
 
 selectedCategories.forEach(cat=>{
@@ -151,9 +190,7 @@ pool.push(...actions[cat]);
 }
 });
 
-if(pool.length === 0){
-return;
-}
+if(pool.length === 0) return;
 
 const action = drawAction(pool);
 
@@ -162,7 +199,8 @@ ws.currentAction = action;
 broadcast({
 type:"action-drawn",
 player:player.name,
-action
+action,
+mode:"normal"
 });
 }
 
@@ -193,10 +231,10 @@ winner:player.name
 return;
 }
 
-const otherPlayer = players.find(p => p.name !== player.name);
+const other = players.find(p => p.name !== player.name);
 
-if(otherPlayer){
-currentTurn = otherPlayer.name;
+if(other){
+currentTurn = other.name;
 }
 
 broadcast({
@@ -223,14 +261,18 @@ players.forEach(p => p.points = 0);
 
 history = [];
 lastActions = [];
-gameStarted = true;
 
-currentTurn = players[0].name;
+categoriesLocked = false;
+
+selectedCategories = [];
+
+currentTurn = null;
 
 broadcast({
 type:"game-start",
 players,
-currentTurn
+currentTurn:null,
+needCategories:true
 });
 
 rematchVotes = 0;
@@ -244,7 +286,13 @@ ws.on("close",()=>{
 players = players.filter(p => p.ws !== ws);
 
 gameStarted = false;
+
+categoriesLocked = false;
+
+selectedCategories = [];
+
 currentTurn = null;
+
 rematchVotes = 0;
 
 broadcast({
