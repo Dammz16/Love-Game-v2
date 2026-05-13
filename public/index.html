@@ -1,5 +1,3 @@
-<!-- public/index.html -->
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -23,12 +21,7 @@ padding:0;
 height:100%;
 font-family:'Poppins',sans-serif;
 
-background:
-linear-gradient(
-135deg,
-#667eea 0%,
-#764ba2 100%
-);
+background:linear-gradient(135deg,#667eea,#764ba2);
 
 color:white;
 
@@ -38,350 +31,163 @@ align-items:center;
 }
 
 /* MENU */
-
 #menu{
 width:100%;
 max-width:420px;
-
 padding:24px;
 }
 
 .menuCard{
 background:rgba(255,255,255,0.12);
-
 backdrop-filter:blur(14px);
-
 border-radius:28px;
-
 padding:36px 28px;
-
-box-shadow:
-0 10px 40px rgba(0,0,0,0.25);
-
 text-align:center;
 }
 
 .menuTitle{
-font-size:34px;
+font-size:32px;
 font-weight:700;
 margin-bottom:10px;
 }
 
 .menuSubtitle{
 opacity:0.8;
-margin-bottom:28px;
+margin-bottom:20px;
 }
 
 #playerName{
 width:100%;
-
-padding:16px;
-
+padding:14px;
 border:none;
-outline:none;
+border-radius:16px;
+margin-bottom:14px;
+}
 
-border-radius:18px;
-
-font-size:16px;
-
+/* CATEGORIES */
+#categories{
+text-align:left;
 margin-bottom:16px;
+padding:10px;
+background:rgba(255,255,255,0.08);
+border-radius:14px;
 }
 
-#joinGame{
-width:100%;
-
-padding:18px;
-
-border:none;
-
-border-radius:20px;
-
-font-size:18px;
-font-weight:700;
-
-background:white;
-color:#5b4b8a;
-
-cursor:pointer;
-
-transition:0.2s;
-}
-
-#joinGame:hover{
-transform:translateY(-2px);
-}
-
-#joinGame:disabled{
-opacity:0.6;
-cursor:not-allowed;
-}
-
-#menuError{
-margin-top:14px;
-font-weight:600;
-color:white;
+#categories h3{
+margin:0 0 10px 0;
+font-size:14px;
 opacity:0.9;
 }
 
-/* GAME */
+#categories label{
+display:block;
+font-size:14px;
+margin:6px 0;
+cursor:pointer;
+}
 
+/* BUTTON */
+#joinGame{
+width:100%;
+padding:16px;
+border:none;
+border-radius:18px;
+background:white;
+color:#5b4b8a;
+font-weight:700;
+cursor:pointer;
+}
+
+/* GAME */
 #game{
 display:none;
-
 width:100%;
 max-width:430px;
-
 padding:20px;
 }
 
-/* TOP BAR */
-
 #topBar{
 display:flex;
-gap:12px;
+gap:10px;
 margin-bottom:20px;
 }
 
 .playerCard{
 flex:1;
-
 background:rgba(255,255,255,0.12);
-
-backdrop-filter:blur(10px);
-
-border-radius:20px;
-
 padding:14px;
+border-radius:16px;
 text-align:center;
 }
 
-.playerName{
-font-size:14px;
-opacity:0.8;
-margin-bottom:4px;
-}
-
 .playerPoints{
-font-size:24px;
+font-size:22px;
 font-weight:700;
 }
 
 /* TURN */
-
 #turnBanner{
 text-align:center;
-
-font-size:24px;
-font-weight:700;
-
 margin-bottom:20px;
+font-weight:700;
 }
 
-.myTurn{
-animation:pulse 1s infinite;
-}
-
-@keyframes pulse{
-
-0%{
-transform:scale(1);
-}
-
-50%{
-transform:scale(1.04);
-}
-
-100%{
-transform:scale(1);
-}
-
-}
-
-/* CARD */
-
+/* ACTION */
 #actionCard{
-
 background:rgba(255,255,255,0.14);
-
-backdrop-filter:blur(14px);
-
-border-radius:30px;
-
-padding:40px 24px;
-
-min-height:300px;
-
-display:flex;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-
+padding:30px;
+border-radius:20px;
 text-align:center;
-
-box-shadow:
-0 10px 40px rgba(0,0,0,0.25);
-
-transition:
-transform 0.3s ease,
-opacity 0.3s ease;
-}
-
-#difficultyBadge{
-padding:8px 18px;
-
-border-radius:999px;
-
-font-size:14px;
-font-weight:600;
-
-margin-bottom:24px;
-
-background:rgba(255,255,255,0.12);
 }
 
 #actionText{
-font-size:32px;
+font-size:22px;
 font-weight:700;
-line-height:1.3;
-
-margin-bottom:22px;
+margin-bottom:10px;
 }
 
 #actionPoints{
-font-size:24px;
-font-weight:700;
+font-size:18px;
 opacity:0.9;
 }
 
-/* DIFFICULTY */
-
-#difficultyButtons{
-display:flex;
-gap:10px;
-
-margin-top:24px;
-margin-bottom:24px;
-}
-
-.difficultyBtn{
-flex:1;
-
-padding:14px;
-
+/* BUTTONS */
+#mainButton, #randomBtn, #rematchBtn{
+width:100%;
+margin-top:10px;
+padding:16px;
 border:none;
-
-border-radius:18px;
-
-font-size:15px;
+border-radius:16px;
 font-weight:700;
-
 cursor:pointer;
-
-transition:0.2s;
 }
 
-.difficultyBtn:hover{
-transform:translateY(-2px);
+#mainButton{
+background:white;
+color:#5b4b8a;
+}
+
+#randomBtn{
+background:linear-gradient(135deg,#ff4d4d,#ff9900);
+color:white;
+}
+
+#rematchBtn{
+background:#ffe066;
+display:none;
+}
+
+/* DIFFICULTY */
+.difficultyBtn{
+margin:5px;
+padding:10px;
+border:none;
+border-radius:12px;
+cursor:pointer;
 }
 
 .difficultyBtn.active{
-outline:3px solid white;
-}
-
-.easy{
-background:#34d399;
-color:black;
-}
-
-.medium{
-background:#fb923c;
-color:black;
-}
-
-.hard{
-background:#f87171;
-color:black;
-}
-
-/* MAIN BUTTON */
-
-#mainButton{
-
-width:100%;
-
-padding:20px;
-
-border:none;
-
-border-radius:24px;
-
-background:white;
-color:#5b4b8a;
-
-font-size:18px;
-font-weight:700;
-
-cursor:pointer;
-
-transition:0.2s;
-}
-
-#mainButton:hover{
-transform:translateY(-2px);
-}
-
-#mainButton:disabled{
-opacity:0.5;
-cursor:not-allowed;
-}
-
-/* REMATCH */
-
-#rematchBtn{
-
-width:100%;
-
-margin-top:16px;
-
-padding:18px;
-
-border:none;
-
-border-radius:22px;
-
-font-size:18px;
-font-weight:700;
-
-background:#ffe066;
-color:black;
-
-cursor:pointer;
-}
-
-/* NOTIFICATION */
-
-#notification{
-
-position:fixed;
-
-top:20px;
-left:50%;
-
-transform:translateX(-50%);
-
-background:rgba(0,0,0,0.75);
-
-padding:12px 22px;
-
-border-radius:999px;
-
-opacity:0;
-
-transition:0.3s;
-}
-
-#notification.show{
-opacity:1;
+outline:2px solid white;
 }
 
 </style>
@@ -391,28 +197,27 @@ opacity:1;
 <body>
 
 <!-- MENU -->
-
 <div id="menu">
 
 <div class="menuCard">
 
-<div class="menuTitle">
-🎮 Duel
+<div class="menuTitle">🎮 Duel</div>
+<div class="menuSubtitle">1vs1 rapide</div>
+
+<input id="playerName" placeholder="Ton prénom">
+
+<!-- CATEGORIES -->
+<div id="categories">
+<h3>Catégories</h3>
+
+<label><input type="checkbox" value="food"> 🍔 Food</label>
+<label><input type="checkbox" value="sport"> 🏃 Sport</label>
+<label><input type="checkbox" value="fun"> 🎉 Fun</label>
+<label><input type="checkbox" value="challenge"> ⚡ Challenge</label>
+
 </div>
 
-<div class="menuSubtitle">
-Affrontez-vous en 1vs1
-</div>
-
-<input
-type="text"
-id="playerName"
-placeholder="Ton prénom"
-/>
-
-<button id="joinGame">
-Rejoindre la partie
-</button>
+<button id="joinGame">Rejoindre</button>
 
 <div id="menuError"></div>
 
@@ -421,107 +226,38 @@ Rejoindre la partie
 </div>
 
 <!-- GAME -->
-
 <div id="game">
 
-<!-- SCORES -->
-
 <div id="topBar">
-
 <div class="playerCard">
-
-<div class="playerName" id="player1Name">
-Joueur 1
-</div>
-
-<div class="playerPoints" id="player1Points">
-0
-</div>
-
+<div id="player1Name">J1</div>
+<div class="playerPoints" id="player1Points">0</div>
 </div>
 
 <div class="playerCard">
-
-<div class="playerName" id="player2Name">
-Joueur 2
+<div id="player2Name">J2</div>
+<div class="playerPoints" id="player2Points">0</div>
+</div>
 </div>
 
-<div class="playerPoints" id="player2Points">
-0
-</div>
-
-</div>
-
-</div>
-
-<!-- TURN -->
-
-<div id="turnBanner">
-En attente...
-</div>
-
-<!-- CARD -->
+<div id="turnBanner"></div>
 
 <div id="actionCard">
-
-<div id="difficultyBadge">
-Choisis une difficulté
+<div id="actionText">Prêt ?</div>
+<div id="actionPoints"></div>
 </div>
 
-<div id="actionText">
-Prêt à découvrir ton défi ?
+<div>
+<button class="difficultyBtn active" data-difficulty="easy">Easy</button>
+<button class="difficultyBtn" data-difficulty="medium">Medium</button>
+<button class="difficultyBtn" data-difficulty="hard">Hard</button>
 </div>
 
-<div id="actionPoints">
+<button id="mainButton">Tirer action</button>
+<button id="randomBtn">🎲 Random x2</button>
+<button id="rematchBtn">Rejouer</button>
 
 </div>
-
-</div>
-
-<!-- DIFFICULTY -->
-
-<div id="difficultyButtons">
-
-<button
-class="difficultyBtn easy active"
-data-difficulty="easy"
->
-🟢 Soft
-</button>
-
-<button
-class="difficultyBtn medium"
-data-difficulty="medium"
->
-🟠 Medium
-</button>
-
-<button
-class="difficultyBtn hard"
-data-difficulty="hard"
->
-🔴 Hard
-</button>
-
-</div>
-
-<!-- MAIN BUTTON -->
-
-<button id="mainButton">
-Découvrir le défi
-</button>
-
-<button id="rematchBtn" style="display:none;">
-Rejouer
-</button>
-
-<button id="randomBtn">
-🎲 Mode Random x2
-</button>
-  
-</div>
-
-<div id="notification"></div>
 
 <script src="frontend.js"></script>
 
