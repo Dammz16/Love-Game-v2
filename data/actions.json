@@ -1,18 +1,19 @@
 {
-  "food": [
-    { "name": "manger un fruit", "points": 10 },
-    { "name": "boire un verre d’eau", "points": 5 }
+  "easy": [
+    { "name": "boire un verre d’eau", "points": 5 },
+    { "name": "dire une blague", "points": 5 },
+    { "name": "faire une grimace", "points": 5 }
   ],
-  "sport": [
-    { "name": "faire 10 pompes", "points": 20 },
-    { "name": "courir sur place 30 secondes", "points": 15 }
+
+  "medium": [
+    { "name": "faire 10 pompes", "points": 15 },
+    { "name": "imiter un animal", "points": 15 },
+    { "name": "danser 20 secondes", "points": 15 }
   ],
-  "fun": [
-    { "name": "imiter un animal", "points": 10 },
-    { "name": "faire une grimace", "points": 8 }
-  ],
-  "challenge": [
-    { "name": "tenir une position 30 sec", "points": 25 },
-    { "name": "ne pas rire pendant 20 sec", "points": 20 }
+
+  "hard": [
+    { "name": "tenir 30 sec en équilibre", "points": 25 },
+    { "name": "faire 20 squats", "points": 25 },
+    { "name": "chanter une chanson", "points": 25 }
   ]
 }
