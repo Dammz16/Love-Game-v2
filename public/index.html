@@ -4,190 +4,52 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Duel 1vs1</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Duel</title>
 
 <style>
-
-*{
-box-sizing:border-box;
-}
-
-html,body{
+body{
 margin:0;
-padding:0;
-height:100%;
-font-family:'Poppins',sans-serif;
-
+font-family:Arial;
 background:linear-gradient(135deg,#667eea,#764ba2);
-
 color:white;
-
-display:flex;
-justify-content:center;
-align-items:center;
-}
-
-/* MENU */
-#menu{
-width:100%;
-max-width:420px;
-padding:24px;
-}
-
-.menuCard{
-background:rgba(255,255,255,0.12);
-backdrop-filter:blur(14px);
-border-radius:28px;
-padding:36px 28px;
 text-align:center;
 }
 
-.menuTitle{
-font-size:32px;
-font-weight:700;
-margin-bottom:10px;
-}
-
-.menuSubtitle{
-opacity:0.8;
-margin-bottom:20px;
-}
-
-#playerName{
-width:100%;
-padding:14px;
-border:none;
-border-radius:16px;
-margin-bottom:14px;
-}
-
-/* CATEGORIES */
-#categories{
-text-align:left;
-margin-bottom:16px;
-padding:10px;
-background:rgba(255,255,255,0.08);
-border-radius:14px;
-}
-
-#categories h3{
-margin:0 0 10px 0;
-font-size:14px;
-opacity:0.9;
-}
-
-#categories label{
-display:block;
-font-size:14px;
-margin:6px 0;
-cursor:pointer;
-}
-
-/* BUTTON */
-#joinGame{
-width:100%;
-padding:16px;
-border:none;
-border-radius:18px;
-background:white;
-color:#5b4b8a;
-font-weight:700;
-cursor:pointer;
-}
-
-/* GAME */
-#game{
-display:none;
-width:100%;
-max-width:430px;
+#menu,#game{
 padding:20px;
 }
 
-#topBar{
-display:flex;
-gap:10px;
-margin-bottom:20px;
-}
+#game{display:none;}
 
-.playerCard{
-flex:1;
-background:rgba(255,255,255,0.12);
-padding:14px;
-border-radius:16px;
-text-align:center;
-}
-
-.playerPoints{
-font-size:22px;
-font-weight:700;
-}
-
-/* TURN */
-#turnBanner{
-text-align:center;
-margin-bottom:20px;
-font-weight:700;
-}
-
-/* ACTION */
-#actionCard{
-background:rgba(255,255,255,0.14);
-padding:30px;
+.card{
+background:rgba(255,255,255,0.15);
+padding:20px;
 border-radius:20px;
-text-align:center;
+margin:10px;
 }
 
-#actionText{
-font-size:22px;
-font-weight:700;
-margin-bottom:10px;
-}
-
-#actionPoints{
-font-size:18px;
-opacity:0.9;
-}
-
-/* BUTTONS */
-#mainButton, #randomBtn, #rematchBtn{
-width:100%;
-margin-top:10px;
-padding:16px;
-border:none;
-border-radius:16px;
-font-weight:700;
-cursor:pointer;
-}
-
-#mainButton{
-background:white;
-color:#5b4b8a;
-}
-
-#randomBtn{
-background:linear-gradient(135deg,#ff4d4d,#ff9900);
-color:white;
-}
-
-#rematchBtn{
-background:#ffe066;
-display:none;
-}
-
-/* DIFFICULTY */
-.difficultyBtn{
+button{
+padding:12px;
 margin:5px;
-padding:10px;
 border:none;
 border-radius:12px;
 cursor:pointer;
 }
 
-.difficultyBtn.active{
-outline:2px solid white;
+#randomBtn{
+background:orange;
+color:white;
+font-weight:bold;
+}
+
+#mainButton{
+background:white;
+color:black;
+}
+
+#categoryScreen{
+display:none;
+margin-top:20px;
 }
 
 </style>
@@ -196,66 +58,42 @@ outline:2px solid white;
 
 <body>
 
-<!-- MENU -->
 <div id="menu">
+<h1>Duel</h1>
 
-<div class="menuCard">
-
-<div class="menuTitle">🎮 Duel</div>
-<div class="menuSubtitle">1vs1 rapide</div>
-
-<input id="playerName" placeholder="Ton prénom">
-
-<!-- CATEGORIES -->
-<div id="categories">
-<h3>Catégories</h3>
-
-<label><input type="checkbox" value="food"> 🍔 Food</label>
-<label><input type="checkbox" value="sport"> 🏃 Sport</label>
-<label><input type="checkbox" value="fun"> 🎉 Fun</label>
-<label><input type="checkbox" value="challenge"> ⚡ Challenge</label>
-
-</div>
+<input id="playerName" placeholder="Prénom">
 
 <button id="joinGame">Rejoindre</button>
 
 <div id="menuError"></div>
-
 </div>
 
-</div>
-
-<!-- GAME -->
 <div id="game">
 
-<div id="topBar">
-<div class="playerCard">
-<div id="player1Name">J1</div>
-<div class="playerPoints" id="player1Points">0</div>
+<div id="categoryScreen">
+<h2>Choisis les catégories</h2>
+
+<label><input type="checkbox" value="food"> Food</label><br>
+<label><input type="checkbox" value="sport"> Sport</label><br>
+<label><input type="checkbox" value="fun"> Fun</label><br>
+<label><input type="checkbox" value="challenge"> Challenge</label><br>
+
+<button id="confirmCategories">Lancer la partie</button>
 </div>
 
-<div class="playerCard">
-<div id="player2Name">J2</div>
-<div class="playerPoints" id="player2Points">0</div>
-</div>
-</div>
-
+<div class="card">
 <div id="turnBanner"></div>
+</div>
 
-<div id="actionCard">
-<div id="actionText">Prêt ?</div>
+<div class="card">
+<div id="actionText">Attente...</div>
 <div id="actionPoints"></div>
 </div>
 
-<div>
-<button class="difficultyBtn active" data-difficulty="easy">Easy</button>
-<button class="difficultyBtn" data-difficulty="medium">Medium</button>
-<button class="difficultyBtn" data-difficulty="hard">Hard</button>
-</div>
+<button id="mainButton">Action</button>
+<button id="randomBtn">Random x2</button>
 
-<button id="mainButton">Tirer action</button>
-<button id="randomBtn">🎲 Random x2</button>
-<button id="rematchBtn">Rejouer</button>
+<button id="rematchBtn" style="display:none;">Rejouer</button>
 
 </div>
 
