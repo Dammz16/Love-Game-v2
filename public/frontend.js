@@ -1,29 +1,11 @@
 const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
 
 let playerName = "";
-let currentTurn = "";
-let selectedDifficulty = "easy";
+let currentTurn = null;
 let currentAction = null;
 
 // =====================
-// DIFFICULTY
-// =====================
-
-document.querySelectorAll(".difficultyBtn").forEach(btn=>{
-btn.onclick=()=>{
-
-document.querySelectorAll(".difficultyBtn")
-.forEach(b=>b.classList.remove("active"));
-
-btn.classList.add("active");
-
-selectedDifficulty = btn.dataset.difficulty;
-
-};
-});
-
-// =====================
-// JOIN + CATEGORIES
+// JOIN
 // =====================
 
 document.getElementById("joinGame").onclick=()=>{
@@ -35,28 +17,32 @@ document.getElementById("menuError").innerText="Entre ton prénom";
 return;
 }
 
-// collect categories
-let selected = [];
-
-document.querySelectorAll("#categories input:checked")
-.forEach(cb=>{
-selected.push(cb.value);
-});
-
-// send categories first
-ws.send(JSON.stringify({
-type:"set-categories",
-categories:selected
-}));
-
-// join game
 ws.send(JSON.stringify({
 type:"join",
 name:playerName
 }));
 
-document.getElementById("joinGame").disabled=true;
-document.getElementById("menuError").innerText="En attente joueur...";
+};
+
+// =====================
+// CATEGORIES CONFIRM
+// =====================
+
+document.getElementById("confirmCategories").onclick=()=>{
+
+let selected = [];
+
+document.querySelectorAll("#categoryScreen input:checked")
+.forEach(cb=>{
+selected.push(cb.value);
+});
+
+ws.send(JSON.stringify({
+type:"set-categories",
+categories:selected
+}));
+
+document.getElementById("categoryScreen").style.display="none";
 };
 
 // =====================
@@ -65,32 +51,33 @@ document.getElementById("menuError").innerText="En attente joueur...";
 
 document.getElementById("mainButton").onclick=()=>{
 
-if(currentTurn !== playerName){
+if(!currentTurn || currentTurn !== playerName){
 alert("Pas ton tour");
 return;
 }
 
 if(currentAction){
+
 ws.send(JSON.stringify({
 type:"complete-action"
 }));
+
 return;
 }
 
 ws.send(JSON.stringify({
 type:"draw-action",
-difficulty:selectedDifficulty,
 mode:"normal"
 }));
 };
 
 // =====================
-// RANDOM BUTTON
+// RANDOM ACTION
 // =====================
 
 document.getElementById("randomBtn").onclick=()=>{
 
-if(currentTurn !== playerName){
+if(!currentTurn || currentTurn !== playerName){
 alert("Pas ton tour");
 return;
 }
@@ -102,17 +89,6 @@ mode:"random"
 };
 
 // =====================
-// REMATCH
-// =====================
-
-document.getElementById("rematchBtn").onclick=()=>{
-
-ws.send(JSON.stringify({
-type:"rematch"
-}));
-};
-
-// =====================
 // SOCKET
 // =====================
 
@@ -120,16 +96,26 @@ ws.onmessage=(event)=>{
 
 const data = JSON.parse(event.data);
 
+// START ROOM
 if(data.type==="game-start"){
 
 document.getElementById("menu").style.display="none";
 document.getElementById("game").style.display="block";
 
-updateScores(data.players);
-currentTurn = data.currentTurn;
-updateTurn();
+if(data.needCategories){
+document.getElementById("categoryScreen").style.display="block";
 }
 
+};
+
+// CATEGORIES CONFIRMED
+if(data.type==="categories-confirmed"){
+
+currentTurn = data.currentTurn;
+
+};
+
+// ACTION
 if(data.type==="action-drawn"){
 
 currentAction = data.action;
@@ -139,50 +125,32 @@ data.player + " : " + data.action.name;
 
 document.getElementById("actionPoints").innerText =
 "+" + data.action.points + " pts";
-}
 
+};
+
+// UPDATE
 if(data.type==="update"){
 
-updateScores(data.players);
 currentTurn = data.currentTurn;
-updateTurn();
-
 currentAction = null;
-}
 
+};
+
+// VICTORY
 if(data.type==="victory"){
 
 document.getElementById("actionText").innerText =
 data.winner + " gagne 🏆";
 
 document.getElementById("rematchBtn").style.display="block";
-}
 
 };
 
-// =====================
-// UI
-// =====================
+// REMATCH
+if(data.type==="game-start" && !data.needCategories){
 
-function updateScores(players){
+document.getElementById("rematchBtn").style.display="none";
 
-if(players[0]){
-document.getElementById("player1Name").innerText = players[0].name;
-document.getElementById("player1Points").innerText = players[0].points;
-}
+};
 
-if(players[1]){
-document.getElementById("player2Name").innerText = players[1].name;
-document.getElementById("player2Points").innerText = players[1].points;
-}
-
-}
-
-function updateTurn(){
-
-document.getElementById("turnBanner").innerText =
-currentTurn === playerName
-? "🟢 À ton tour"
-: "⏳ Tour de " + currentTurn;
-
-}
+};
