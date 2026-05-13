@@ -21,18 +21,10 @@ fs.readFileSync("./data/actions.json")
 
 let players = [];
 let gameStarted = false;
-
 let currentTurn = null;
-
 let history = [];
-
 let lastActions = [];
-
 let rematchVotes = 0;
-
-let selectedCategories = [];
-
-let categoriesLocked = false;
 
 // ======================
 // UTILS
@@ -105,38 +97,19 @@ points:0,
 ws
 });
 
-// START ROOM (mais pas jeu)
 if(players.length === 2){
 
 gameStarted = true;
+currentTurn = players[0].name;
 
 broadcast({
 type:"game-start",
 players,
-currentTurn:null,
-needCategories:true
-});
-
-}
-
-}
-
-// ======================
-// SET CATEGORIES (PHASE 2)
-// ======================
-
-if(data.type === "set-categories"){
-
-selectedCategories = data.categories || [];
-categoriesLocked = true;
-
-currentTurn = players[0].name;
-
-broadcast({
-type:"categories-confirmed",
-categories:selectedCategories,
 currentTurn
 });
+
+}
+
 }
 
 // ======================
@@ -148,22 +121,16 @@ if(data.type === "draw-action"){
 const player = getPlayer(ws);
 if(!player) return;
 
-if(!categoriesLocked) return;
-
 if(currentTurn !== player.name) return;
 
 /* 🔥 RANDOM MODE */
 if(data.mode === "random"){
 
-const allActions = [];
-
-selectedCategories.forEach(cat=>{
-if(actions[cat]){
-allActions.push(...actions[cat]);
-}
-});
-
-if(allActions.length === 0) return;
+const allActions = [
+...actions.easy,
+...actions.medium,
+...actions.hard
+];
 
 const action = drawAction(allActions);
 
@@ -182,17 +149,10 @@ return;
 }
 
 /* 🟢 NORMAL MODE */
-let pool = [];
+const list = actions[data.difficulty];
+if(!list) return;
 
-selectedCategories.forEach(cat=>{
-if(actions[cat]){
-pool.push(...actions[cat]);
-}
-});
-
-if(pool.length === 0) return;
-
-const action = drawAction(pool);
+const action = drawAction(list);
 
 ws.currentAction = action;
 
@@ -217,9 +177,7 @@ if(!ws.currentAction) return;
 
 player.points += ws.currentAction.points;
 
-history.push(
-player.name + " : " + ws.currentAction.name
-);
+history.push(player.name + " : " + ws.currentAction.name);
 
 if(player.points >= victoryScore){
 
@@ -262,17 +220,14 @@ players.forEach(p => p.points = 0);
 history = [];
 lastActions = [];
 
-categoriesLocked = false;
+gameStarted = true;
 
-selectedCategories = [];
-
-currentTurn = null;
+currentTurn = players[0].name;
 
 broadcast({
 type:"game-start",
 players,
-currentTurn:null,
-needCategories:true
+currentTurn
 });
 
 rematchVotes = 0;
@@ -286,13 +241,7 @@ ws.on("close",()=>{
 players = players.filter(p => p.ws !== ws);
 
 gameStarted = false;
-
-categoriesLocked = false;
-
-selectedCategories = [];
-
 currentTurn = null;
-
 rematchVotes = 0;
 
 broadcast({
