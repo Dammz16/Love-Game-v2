@@ -1,215 +1,305 @@
-const ws = new WebSocket(location.origin.replace(/^http/, 'ws'));
+// public/frontend.js
+
+const ws = new WebSocket(
+location.origin.replace(/^http/, 'ws')
+);
 
 let playerName = "";
 let currentTurn = "";
-const victoryScore = 125;
 
-document.getElementById("joinGame").onclick = () => {
+let selectedDifficulty = "easy";
 
-playerName = document.getElementById("playerName").value.trim();
+let currentAction = null;
+
+document
+.querySelectorAll(".difficultyBtn")
+.forEach(btn=>{
+
+btn.onclick=()=>{
+
+document
+.querySelectorAll(".difficultyBtn")
+.forEach(b=>b.classList.remove("active"));
+
+btn.classList.add("active");
+
+selectedDifficulty = btn.dataset.difficulty;
+
+};
+
+});
+
+/* JOIN */
+
+document.getElementById("joinGame").onclick=()=>{
+
+playerName =
+document
+.getElementById("playerName")
+.value
+.trim();
 
 if(!playerName){
-document.getElementById("menuError").innerText="Entre ton prénom";
+
+document.getElementById("menuError")
+.innerText="Entre ton prénom";
+
 return;
 }
 
-document.getElementById("joinGame").disabled=true;
-document.getElementById("menuError").innerText="En attente de l’autre joueur…";
+document.getElementById("joinGame")
+.disabled=true;
 
-ws.send(JSON.stringify({type:"join",name:playerName}));
+document.getElementById("menuError")
+.innerText="En attente de l’autre joueur...";
+
+ws.send(JSON.stringify({
+type:"join",
+name:playerName
+}));
 
 };
 
-document.getElementById("drawBtn").onclick=()=>{
+/* MAIN BUTTON */
 
-const difficulty=document.getElementById("difficulty").value;
+document.getElementById("mainButton").onclick=()=>{
 
 if(currentTurn!==playerName){
-showNotification("Ce n'est pas ton tour !");
+
+showNotification("Ce n'est pas ton tour");
+
 return;
 }
 
-ws.send(JSON.stringify({type:"draw-action",difficulty}));
+if(currentAction){
+
+ws.send(JSON.stringify({
+type:"complete-action"
+}));
+
+return;
+}
+
+ws.send(JSON.stringify({
+type:"draw-action",
+difficulty:selectedDifficulty
+}));
 
 };
 
-document.getElementById("completeBtn").onclick=()=>{
-ws.send(JSON.stringify({type:"complete-action"}));
-};
+/* REMATCH */
 
 document.getElementById("rematchBtn").onclick=()=>{
-ws.send(JSON.stringify({type:"rematch"}));
+
+ws.send(JSON.stringify({
+type:"rematch"
+}));
+
 };
+
+/* SOCKET */
 
 ws.onmessage=(event)=>{
 
-const data=JSON.parse(event.data);
+const data = JSON.parse(event.data);
+
+/* GAME START */
 
 if(data.type==="game-start"){
 
-document.getElementById("menu").style.display="none";
-document.getElementById("game").style.display="block";
+document.getElementById("menu")
+.style.display="none";
+
+document.getElementById("game")
+.style.display="block";
 
 updateScores(data.players);
-updateProgress(data.players);
 
 currentTurn=data.currentTurn;
-updateTurnDisplay();
+
+updateTurn();
+
+resetCard();
+
+document.getElementById("mainButton")
+.disabled=false;
+
+document.getElementById("mainButton")
+.innerText="Découvrir le défi";
+
+document.getElementById("rematchBtn")
+.style.display="none";
+
+currentAction=null;
 
 }
+
+/* ACTION DRAWN */
 
 if(data.type==="action-drawn"){
 
-document.getElementById("currentAction").innerText=
-data.player+" doit "+data.action.name+" (+"+data.action.points+" pts)";
+currentAction=data.action;
 
-if(data.player===playerName)
-document.getElementById("completeBtn").style.display="inline-block";
+const badge=
+document.getElementById("difficultyBadge");
 
-showPoints(data.action.points);
+if(selectedDifficulty==="easy")
+badge.innerText="🟢 Soft";
+
+if(selectedDifficulty==="medium")
+badge.innerText="🟠 Medium";
+
+if(selectedDifficulty==="hard")
+badge.innerText="🔴 Hard";
+
+document.getElementById("actionText")
+.innerText=
+data.player+
+" doit "+
+data.action.name;
+
+document.getElementById("actionPoints")
+.innerText=
+"+"+
+data.action.points+
+" pts";
+
+document.getElementById("mainButton")
+.innerText="Défi terminé";
 
 }
+
+/* UPDATE */
 
 if(data.type==="update"){
 
+updateScores(data.players);
+
 currentTurn=data.currentTurn;
 
-updateTurnDisplay();
-updateScores(data.players);
-updateProgress(data.players);
+updateTurn();
 
-document.getElementById("currentAction").innerText="";
-document.getElementById("completeBtn").style.display="none";
+resetCard();
 
-if(data.history)
-updateHistory(data.history);
+currentAction=null;
+
+document.getElementById("mainButton")
+.innerText="Découvrir le défi";
 
 }
+
+/* VICTORY */
 
 if(data.type==="victory"){
 
-document.getElementById("currentAction").innerText=data.winner+" a gagné 🏆";
+document.getElementById("actionText")
+.innerText=
+data.winner+
+" a gagné 🏆";
 
-document.getElementById("drawBtn").disabled=true;
+document.getElementById("actionPoints")
+.innerText="";
 
-document.getElementById("rematchBtn").style.display="inline-block";
+document.getElementById("difficultyBadge")
+.innerText="Victoire";
+
+document.getElementById("mainButton")
+.disabled=true;
+
+document.getElementById("rematchBtn")
+.style.display="block";
 
 }
+
+/* DISCONNECTED */
 
 if(data.type==="player-disconnected"){
 
 showNotification("⚠️ Joueur déconnecté");
-document.getElementById("drawBtn").disabled=true;
+
+document.getElementById("mainButton")
+.disabled=true;
 
 }
 
 };
 
-function updateTurnDisplay(){
-
-const turn=document.getElementById("currentTurn");
-
-if(currentTurn===playerName){
-
-turn.innerText="🟢 À ton tour !";
-turn.classList.add("myTurn");
-document.getElementById("drawBtn").disabled=false;
-
-}else{
-
-turn.innerText="⏳ Tour de "+currentTurn;
-turn.classList.remove("myTurn");
-document.getElementById("drawBtn").disabled=true;
-
-}
-
-}
+/* FUNCTIONS */
 
 function updateScores(players){
 
-const list=document.getElementById("scoreList");
+if(players[0]){
 
-list.innerHTML="";
+document.getElementById("player1Name")
+.innerText=players[0].name;
 
-players.forEach(p=>{
-
-const li=document.createElement("li");
-
-li.innerText=p.name+" : "+p.points+" pts";
-
-list.appendChild(li);
-
-});
+document.getElementById("player1Points")
+.innerText=players[0].points;
 
 }
 
-function updateProgress(players){
+if(players[1]){
 
-const container=document.getElementById("progressBars");
+document.getElementById("player2Name")
+.innerText=players[1].name;
 
-container.innerHTML="";
-
-players.forEach(p=>{
-
-const percent=Math.min(100,(p.points/victoryScore)*100);
-
-const div=document.createElement("div");
-
-div.className="progressContainer";
-
-div.innerHTML=`
-<div>${p.name}</div>
-<div class="progressBar">
-<div class="progressFill" style="width:${percent}%"></div>
-</div>
-`;
-
-container.appendChild(div);
-
-});
+document.getElementById("player2Points")
+.innerText=players[1].points;
 
 }
 
-function updateHistory(history){
+}
 
-const list=document.getElementById("historyList");
+function updateTurn(){
 
-list.innerHTML="";
+const banner=
+document.getElementById("turnBanner");
 
-history.slice(-5).reverse().forEach(action=>{
+banner.classList.remove("myTurn");
 
-const li=document.createElement("li");
+if(currentTurn===playerName){
 
-li.innerText=action;
+banner.innerText="🟢 À ton tour";
 
-list.appendChild(li);
+banner.classList.add("myTurn");
 
-});
+}else{
+
+banner.innerText=
+"⏳ Tour de "+
+currentTurn;
 
 }
 
-function showPoints(points){
+}
 
-const popup=document.getElementById("pointsPopup");
+function resetCard(){
 
-popup.innerText="+"+points+" pts";
+document.getElementById("difficultyBadge")
+.innerText="Choisis une difficulté";
 
-popup.classList.add("show");
+document.getElementById("actionText")
+.innerText=
+"Prêt à découvrir ton défi ?";
+
+document.getElementById("actionPoints")
+.innerText="";
+
+}
+
+function showNotification(message){
+
+const notif=
+document.getElementById("notification");
+
+notif.innerText=message;
+
+notif.classList.add("show");
 
 setTimeout(()=>{
-popup.classList.remove("show");
-},1000);
 
-}
+notif.classList.remove("show");
 
-function showNotification(msg){
-
-const n=document.getElementById("notification");
-
-n.innerText=msg;
-
-n.classList.add("show");
-
-setTimeout(()=>n.classList.remove("show"),2500);
+},2500);
 
 }
