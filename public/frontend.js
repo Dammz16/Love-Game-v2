@@ -25,27 +25,6 @@ name:playerName
 };
 
 // =====================
-// CATEGORIES CONFIRM
-// =====================
-
-document.getElementById("confirmCategories").onclick=()=>{
-
-let selected = [];
-
-document.querySelectorAll("#categoryScreen input:checked")
-.forEach(cb=>{
-selected.push(cb.value);
-});
-
-ws.send(JSON.stringify({
-type:"set-categories",
-categories:selected
-}));
-
-document.getElementById("categoryScreen").style.display="none";
-};
-
-// =====================
 // NORMAL ACTION
 // =====================
 
@@ -67,6 +46,7 @@ return;
 
 ws.send(JSON.stringify({
 type:"draw-action",
+difficulty:"easy",
 mode:"normal"
 }));
 };
@@ -96,26 +76,18 @@ ws.onmessage=(event)=>{
 
 const data = JSON.parse(event.data);
 
-// START ROOM
 if(data.type==="game-start"){
 
 document.getElementById("menu").style.display="none";
 document.getElementById("game").style.display="block";
 
-if(data.needCategories){
-document.getElementById("categoryScreen").style.display="block";
-}
-
-};
-
-// CATEGORIES CONFIRMED
-if(data.type==="categories-confirmed"){
+updateScores(data.players);
 
 currentTurn = data.currentTurn;
 
-};
+updateTurn();
+}
 
-// ACTION
 if(data.type==="action-drawn"){
 
 currentAction = data.action;
@@ -125,32 +97,50 @@ data.player + " : " + data.action.name;
 
 document.getElementById("actionPoints").innerText =
 "+" + data.action.points + " pts";
+}
 
-};
-
-// UPDATE
 if(data.type==="update"){
 
+updateScores(data.players);
+
 currentTurn = data.currentTurn;
+
 currentAction = null;
 
-};
+updateTurn();
+}
 
-// VICTORY
 if(data.type==="victory"){
 
 document.getElementById("actionText").innerText =
 data.winner + " gagne 🏆";
 
 document.getElementById("rematchBtn").style.display="block";
+}
 
 };
 
-// REMATCH
-if(data.type==="game-start" && !data.needCategories){
+// =====================
+// UI
+// =====================
 
-document.getElementById("rematchBtn").style.display="none";
+function updateScores(players){
 
-};
+if(players[0]){
+document.getElementById("p1").innerText = players[0].points;
+}
 
-};
+if(players[1]){
+document.getElementById("p2").innerText = players[1].points;
+}
+
+}
+
+function updateTurn(){
+
+document.getElementById("turnBanner").innerText =
+currentTurn === playerName
+? "🟢 À ton tour"
+: "⏳ Tour de " + currentTurn;
+
+}
