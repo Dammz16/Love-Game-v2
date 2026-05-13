@@ -3,7 +3,6 @@
 
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Duel</title>
 
 <style>
@@ -15,10 +14,7 @@ color:white;
 text-align:center;
 }
 
-#menu,#game{
-padding:20px;
-}
-
+#menu,#game{padding:20px;}
 #game{display:none;}
 
 .card{
@@ -47,11 +43,9 @@ background:white;
 color:black;
 }
 
-#categoryScreen{
+#rematchBtn{
 display:none;
-margin-top:20px;
 }
-
 </style>
 
 </head>
@@ -59,7 +53,7 @@ margin-top:20px;
 <body>
 
 <div id="menu">
-<h1>Duel</h1>
+<h1>Duel 1vs1</h1>
 
 <input id="playerName" placeholder="Prénom">
 
@@ -69,17 +63,6 @@ margin-top:20px;
 </div>
 
 <div id="game">
-
-<div id="categoryScreen">
-<h2>Choisis les catégories</h2>
-
-<label><input type="checkbox" value="food"> Food</label><br>
-<label><input type="checkbox" value="sport"> Sport</label><br>
-<label><input type="checkbox" value="fun"> Fun</label><br>
-<label><input type="checkbox" value="challenge"> Challenge</label><br>
-
-<button id="confirmCategories">Lancer la partie</button>
-</div>
 
 <div class="card">
 <div id="turnBanner"></div>
@@ -93,7 +76,7 @@ margin-top:20px;
 <button id="mainButton">Action</button>
 <button id="randomBtn">Random x2</button>
 
-<button id="rematchBtn" style="display:none;">Rejouer</button>
+<button id="rematchBtn">Rejouer</button>
 
 </div>
 
