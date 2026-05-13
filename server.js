@@ -1,17 +1,11 @@
-// server.js
-
 const express = require("express");
 const http = require("http");
 const WebSocket = require("ws");
 const fs = require("fs");
 
 const app = express();
-
 const server = http.createServer(app);
-
-const wss = new WebSocket.Server({
-server
-});
+const wss = new WebSocket.Server({ server });
 
 app.use(express.static("public"));
 
@@ -21,57 +15,55 @@ const actions = JSON.parse(
 fs.readFileSync("./data/actions.json")
 );
 
+// ======================
+// STATE GLOBAL
+// ======================
+
 let players = [];
-
+let gameStarted = false;
 let currentTurn = null;
-
 let history = [];
-
 let lastActions = [];
-
 let rematchVotes = 0;
 
+// ======================
+// UTILS
+// ======================
+
 function broadcast(data){
-
 wss.clients.forEach(client=>{
-
-if(client.readyState===WebSocket.OPEN){
-
+if(client.readyState === WebSocket.OPEN){
 client.send(JSON.stringify(data));
-
 }
-
 });
-
 }
 
+function getPlayer(ws){
+return players.find(p => p.ws === ws);
+}
+
+// évite répétition des actions
 function drawAction(list){
 
 let action;
 
-do{
-
-action =
-list[
-Math.floor(
-Math.random()*list.length
-)
-];
-
+do {
+action = list[Math.floor(Math.random() * list.length)];
 }
 while(lastActions.includes(action.name));
 
 lastActions.push(action.name);
 
-if(lastActions.length>3){
-
+if(lastActions.length > 3){
 lastActions.shift();
-
 }
 
 return action;
-
 }
+
+// ======================
+// CONNECTION
+// ======================
 
 wss.on("connection",(ws)=>{
 
@@ -79,17 +71,25 @@ ws.on("message",(message)=>{
 
 const data = JSON.parse(message);
 
-/* JOIN */
+// ======================
+// JOIN GAME
+// ======================
 
-if(data.type==="join"){
+if(data.type === "join"){
 
-if(players.length>=2){
+const existing = players.find(p => p.name === data.name);
 
+// reconnexion simple
+if(existing){
+existing.ws = ws;
+return;
+}
+
+if(players.length >= 2){
 ws.send(JSON.stringify({
 type:"error",
-message:"La partie est pleine"
+message:"Partie pleine"
 }));
-
 return;
 }
 
@@ -99,9 +99,11 @@ points:0,
 ws
 });
 
-if(players.length===2){
+// démarrage partie
+if(players.length === 2 && !gameStarted){
 
-currentTurn=players[0].name;
+gameStarted = true;
+currentTurn = players[0].name;
 
 broadcast({
 type:"game-start",
@@ -113,27 +115,23 @@ currentTurn
 
 }
 
-/* DRAW ACTION */
+// ======================
+// DRAW ACTION
+// ======================
 
-if(data.type==="draw-action"){
+if(data.type === "draw-action"){
 
-const player =
-players.find(p=>p.ws===ws);
-
+const player = getPlayer(ws);
 if(!player) return;
 
-if(currentTurn!==player.name)
-return;
+if(currentTurn !== player.name) return;
 
-const actionList =
-actions[data.difficulty];
-
+const actionList = actions[data.difficulty];
 if(!actionList) return;
 
-const action =
-drawAction(actionList);
+const action = drawAction(actionList);
 
-ws.currentAction=action;
+ws.currentAction = action;
 
 broadcast({
 type:"action-drawn",
@@ -143,27 +141,25 @@ action
 
 }
 
-/* COMPLETE ACTION */
+// ======================
+// COMPLETE ACTION
+// ======================
 
-if(data.type==="complete-action"){
+if(data.type === "complete-action"){
 
-const player =
-players.find(p=>p.ws===ws);
-
+const player = getPlayer(ws);
 if(!player) return;
 
 if(!ws.currentAction) return;
 
-player.points +=
-ws.currentAction.points;
+player.points += ws.currentAction.points;
 
 history.push(
-player.name+
-" : "+
-ws.currentAction.name
+player.name + " : " + ws.currentAction.name
 );
 
-if(player.points>=victoryScore){
+// victoire
+if(player.points >= victoryScore){
 
 broadcast({
 type:"victory",
@@ -173,15 +169,11 @@ winner:player.name
 return;
 }
 
-const otherPlayer =
-players.find(
-p=>p.name!==player.name
-);
+// switch turn
+const otherPlayer = players.find(p => p.name !== player.name);
 
 if(otherPlayer){
-
-currentTurn=otherPlayer.name;
-
+currentTurn = otherPlayer.name;
 }
 
 broadcast({
@@ -191,29 +183,29 @@ currentTurn,
 history
 });
 
-ws.currentAction=null;
+ws.currentAction = null;
 
 }
 
-/* REMATCH */
+// ======================
+// REMATCH
+// ======================
 
-if(data.type==="rematch"){
+if(data.type === "rematch"){
 
 rematchVotes++;
 
-if(rematchVotes===2){
+if(rematchVotes === 2){
 
-players.forEach(p=>{
-
-p.points=0;
-
+players.forEach(p => {
+p.points = 0;
 });
 
-history=[];
+history = [];
+lastActions = [];
+gameStarted = true;
 
-lastActions=[];
-
-currentTurn=players[0].name;
+currentTurn = players[0].name;
 
 broadcast({
 type:"game-start",
@@ -221,46 +213,45 @@ players,
 currentTurn
 });
 
-rematchVotes=0;
-
+rematchVotes = 0;
 }
 
 }
 
 });
 
+// ======================
+// DISCONNECT
+// ======================
+
 ws.on("close",()=>{
 
-players =
-players.filter(
-p=>p.ws!==ws
-);
+const player = getPlayer(ws);
+
+if(!player) return;
+
+// remove player
+players = players.filter(p => p.ws !== ws);
+
+// reset state
+gameStarted = false;
+currentTurn = null;
+rematchVotes = 0;
 
 broadcast({
 type:"player-disconnected"
 });
 
-if(players.length===0){
-
-history=[];
-
-lastActions=[];
-
-currentTurn=null;
-
-}
-
 });
 
 });
 
-const PORT =
-process.env.PORT || 3000;
+// ======================
+// START SERVER
+// ======================
+
+const PORT = process.env.PORT || 3000;
 
 server.listen(PORT,()=>{
-
-console.log(
-"Server running on port "+PORT
-);
-
+console.log("Server running on port " + PORT);
 });
