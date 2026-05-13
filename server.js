@@ -15,12 +15,20 @@ const actions = JSON.parse(
 fs.readFileSync("./data/actions.json")
 );
 
+// ======================
+// STATE
+// ======================
+
 let players = [];
 let gameStarted = false;
 let currentTurn = null;
 let history = [];
 let lastActions = [];
 let rematchVotes = 0;
+
+// ======================
+// UTILS
+// ======================
 
 function broadcast(data){
 wss.clients.forEach(client=>{
@@ -52,13 +60,20 @@ lastActions.shift();
 return action;
 }
 
+// ======================
+// CONNECTION
+// ======================
+
 wss.on("connection",(ws)=>{
 
 ws.on("message",(message)=>{
 
 const data = JSON.parse(message);
 
-/* JOIN */
+// ======================
+// JOIN
+// ======================
+
 if(data.type === "join"){
 
 const existing = players.find(p => p.name === data.name);
@@ -96,7 +111,10 @@ currentTurn
 }
 }
 
-/* DRAW ACTION (NORMAL + RANDOM EVENT) */
+// ======================
+// DRAW ACTION (NORMAL + RANDOM)
+// ======================
+
 if(data.type === "draw-action"){
 
 const player = getPlayer(ws);
@@ -104,7 +122,7 @@ if(!player) return;
 
 if(currentTurn !== player.name) return;
 
-/* 🔥 MODE RANDOM */
+/* 🎲 RANDOM MODE DIRECT */
 if(data.mode === "random"){
 
 const allActions = [
@@ -129,7 +147,7 @@ mode:"random"
 return;
 }
 
-/* 🟢 MODE NORMAL */
+/* 🟢 NORMAL MODE */
 const actionList = actions[data.difficulty];
 if(!actionList) return;
 
@@ -145,7 +163,10 @@ mode:"normal"
 });
 }
 
-/* COMPLETE ACTION */
+// ======================
+// COMPLETE ACTION
+// ======================
+
 if(data.type === "complete-action"){
 
 const player = getPlayer(ws);
@@ -185,7 +206,10 @@ history
 ws.currentAction = null;
 }
 
-/* REMATCH */
+// ======================
+// REMATCH
+// ======================
+
 if(data.type === "rematch"){
 
 rematchVotes++;
