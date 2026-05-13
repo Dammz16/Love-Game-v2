@@ -11,6 +11,7 @@ app.use(express.static("public"));
 
 const victoryScore = 125;
 
+// 👉 actions par catégorie
 const actions = JSON.parse(
 fs.readFileSync("./data/actions.json")
 );
@@ -25,6 +26,9 @@ let currentTurn = null;
 let history = [];
 let lastActions = [];
 let rematchVotes = 0;
+
+// 👉 NOUVEAU : catégories sélectionnées
+let selectedCategories = [];
 
 // ======================
 // UTILS
@@ -112,7 +116,23 @@ currentTurn
 }
 
 // ======================
-// DRAW ACTION (NORMAL + RANDOM)
+// SET CATEGORIES (NOUVEAU)
+// ======================
+
+if(data.type === "set-categories"){
+
+selectedCategories = data.categories || [];
+
+console.log("Catégories sélectionnées :", selectedCategories);
+
+broadcast({
+type:"categories-set",
+categories:selectedCategories
+});
+}
+
+// ======================
+// DRAW ACTION
 // ======================
 
 if(data.type === "draw-action"){
@@ -122,44 +142,27 @@ if(!player) return;
 
 if(currentTurn !== player.name) return;
 
-/* 🎲 RANDOM MODE DIRECT */
-if(data.mode === "random"){
+// 👉 pool basé sur catégories sélectionnées
+let pool = [];
 
-const allActions = [
-...actions.easy,
-...actions.medium,
-...actions.hard
-];
-
-const action = drawAction(allActions);
-
-action.points = action.points * 2;
-
-ws.currentAction = action;
-
-broadcast({
-type:"action-drawn",
-player:player.name,
-action,
-mode:"random"
+selectedCategories.forEach(cat=>{
+if(actions[cat]){
+pool.push(...actions[cat]);
+}
 });
 
+if(pool.length === 0){
 return;
 }
 
-/* 🟢 NORMAL MODE */
-const actionList = actions[data.difficulty];
-if(!actionList) return;
-
-const action = drawAction(actionList);
+const action = drawAction(pool);
 
 ws.currentAction = action;
 
 broadcast({
 type:"action-drawn",
 player:player.name,
-action,
-mode:"normal"
+action
 });
 }
 
