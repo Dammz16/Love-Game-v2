@@ -1,117 +1,94 @@
-// public/frontend.js
-
 const ws = new WebSocket(
 location.origin.replace(/^http/, 'ws')
 );
 
 let playerName = "";
 let currentTurn = "";
-
 let selectedDifficulty = "easy";
-
+let mode = "normal";
 let currentAction = null;
 
-document
-.querySelectorAll(".difficultyBtn")
-.forEach(btn=>{
-
+/* DIFFICULTY BUTTONS */
+document.querySelectorAll(".difficultyBtn").forEach(btn=>{
 btn.onclick=()=>{
 
-document
-.querySelectorAll(".difficultyBtn")
+document.querySelectorAll(".difficultyBtn")
 .forEach(b=>b.classList.remove("active"));
 
 btn.classList.add("active");
 
 selectedDifficulty = btn.dataset.difficulty;
+mode = "normal";
 
 };
-
 });
 
-/* JOIN */
+/* RANDOM MODE */
+document.getElementById("randomBtn").onclick = () => {
+mode = "random";
+showNotification("🎲 Mode Random activé (x2)");
+};
 
+/* JOIN */
 document.getElementById("joinGame").onclick=()=>{
 
 playerName =
-document
-.getElementById("playerName")
-.value
-.trim();
+document.getElementById("playerName").value.trim();
 
 if(!playerName){
-
-document.getElementById("menuError")
-.innerText="Entre ton prénom";
-
+document.getElementById("menuError").innerText="Entre ton prénom";
 return;
 }
 
-document.getElementById("joinGame")
-.disabled=true;
+document.getElementById("joinGame").disabled=true;
 
-document.getElementById("menuError")
-.innerText="En attente de l’autre joueur...";
+document.getElementById("menuError").innerText="En attente de l’autre joueur...";
 
 ws.send(JSON.stringify({
 type:"join",
 name:playerName
 }));
-
 };
 
 /* MAIN BUTTON */
-
 document.getElementById("mainButton").onclick=()=>{
 
 if(currentTurn!==playerName){
-
 showNotification("Ce n'est pas ton tour");
-
 return;
 }
 
 if(currentAction){
-
 ws.send(JSON.stringify({
 type:"complete-action"
 }));
-
 return;
 }
 
 ws.send(JSON.stringify({
 type:"draw-action",
-difficulty:selectedDifficulty
+difficulty:selectedDifficulty,
+mode:mode
 }));
-
 };
 
 /* REMATCH */
-
 document.getElementById("rematchBtn").onclick=()=>{
-
 ws.send(JSON.stringify({
 type:"rematch"
 }));
-
 };
 
 /* SOCKET */
-
 ws.onmessage=(event)=>{
 
 const data = JSON.parse(event.data);
 
-/* GAME START */
-
+/* START */
 if(data.type==="game-start"){
 
-document.getElementById("menu")
-.style.display="none";
-
-document.getElementById("game")
-.style.display="block";
+document.getElementById("menu").style.display="none";
+document.getElementById("game").style.display="block";
 
 updateScores(data.players);
 
@@ -121,185 +98,101 @@ updateTurn();
 
 resetCard();
 
-document.getElementById("mainButton")
-.disabled=false;
+document.getElementById("mainButton").innerText="Découvrir le défi";
 
-document.getElementById("mainButton")
-.innerText="Découvrir le défi";
-
-document.getElementById("rematchBtn")
-.style.display="none";
+document.getElementById("rematchBtn").style.display="none";
 
 currentAction=null;
-
 }
 
-/* ACTION DRAWN */
-
+/* ACTION */
 if(data.type==="action-drawn"){
 
 currentAction=data.action;
 
-const badge=
-document.getElementById("difficultyBadge");
+document.getElementById("difficultyBadge").innerText =
+data.mode==="random"
+? "🎲 RANDOM x2"
+: "Mode normal";
 
-if(selectedDifficulty==="easy")
-badge.innerText="🟢 Soft";
+document.getElementById("actionText").innerText =
+data.player + " doit " + data.action.name;
 
-if(selectedDifficulty==="medium")
-badge.innerText="🟠 Medium";
+document.getElementById("actionPoints").innerText =
+"+" + data.action.points + " pts";
 
-if(selectedDifficulty==="hard")
-badge.innerText="🔴 Hard";
-
-document.getElementById("actionText")
-.innerText=
-data.player+
-" doit "+
-data.action.name;
-
-document.getElementById("actionPoints")
-.innerText=
-"+"+
-data.action.points+
-" pts";
-
-document.getElementById("mainButton")
-.innerText="Défi terminé";
-
+document.getElementById("mainButton").innerText="Défi terminé";
 }
 
 /* UPDATE */
-
 if(data.type==="update"){
 
 updateScores(data.players);
-
 currentTurn=data.currentTurn;
-
 updateTurn();
 
 resetCard();
-
 currentAction=null;
 
-document.getElementById("mainButton")
-.innerText="Découvrir le défi";
-
+document.getElementById("mainButton").innerText="Découvrir le défi";
 }
 
 /* VICTORY */
-
 if(data.type==="victory"){
 
-document.getElementById("actionText")
-.innerText=
-data.winner+
-" a gagné 🏆";
+document.getElementById("actionText").innerText =
+data.winner + " a gagné 🏆";
 
-document.getElementById("actionPoints")
-.innerText="";
-
-document.getElementById("difficultyBadge")
-.innerText="Victoire";
-
-document.getElementById("mainButton")
-.disabled=true;
-
-document.getElementById("rematchBtn")
-.style.display="block";
-
+document.getElementById("mainButton").disabled=true;
+document.getElementById("rematchBtn").style.display="block";
 }
 
-/* DISCONNECTED */
-
+/* DISCONNECT */
 if(data.type==="player-disconnected"){
-
 showNotification("⚠️ Joueur déconnecté");
-
-document.getElementById("mainButton")
-.disabled=true;
-
+document.getElementById("mainButton").disabled=true;
 }
-
 };
 
-/* FUNCTIONS */
-
+/* UI FUNCTIONS */
 function updateScores(players){
 
 if(players[0]){
-
-document.getElementById("player1Name")
-.innerText=players[0].name;
-
-document.getElementById("player1Points")
-.innerText=players[0].points;
-
+document.getElementById("player1Name").innerText=players[0].name;
+document.getElementById("player1Points").innerText=players[0].points;
 }
 
 if(players[1]){
-
-document.getElementById("player2Name")
-.innerText=players[1].name;
-
-document.getElementById("player2Points")
-.innerText=players[1].points;
-
+document.getElementById("player2Name").innerText=players[1].name;
+document.getElementById("player2Points").innerText=players[1].points;
 }
-
 }
 
 function updateTurn(){
 
-const banner=
-document.getElementById("turnBanner");
-
-banner.classList.remove("myTurn");
+const banner=document.getElementById("turnBanner");
 
 if(currentTurn===playerName){
-
 banner.innerText="🟢 À ton tour";
-
-banner.classList.add("myTurn");
-
 }else{
-
-banner.innerText=
-"⏳ Tour de "+
-currentTurn;
-
+banner.innerText="⏳ Tour de "+currentTurn;
 }
-
 }
 
 function resetCard(){
-
-document.getElementById("difficultyBadge")
-.innerText="Choisis une difficulté";
-
-document.getElementById("actionText")
-.innerText=
-"Prêt à découvrir ton défi ?";
-
-document.getElementById("actionPoints")
-.innerText="";
-
+document.getElementById("difficultyBadge").innerText="Choisis une difficulté";
+document.getElementById("actionText").innerText="Prêt à découvrir ton défi ?";
+document.getElementById("actionPoints").innerText="";
 }
 
 function showNotification(message){
 
-const notif=
-document.getElementById("notification");
+const notif=document.getElementById("notification");
 
 notif.innerText=message;
-
 notif.classList.add("show");
 
 setTimeout(()=>{
-
 notif.classList.remove("show");
-
 },2500);
-
 }
