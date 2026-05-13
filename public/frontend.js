@@ -5,10 +5,12 @@ location.origin.replace(/^http/, 'ws')
 let playerName = "";
 let currentTurn = "";
 let selectedDifficulty = "easy";
-let mode = "normal";
 let currentAction = null;
 
-/* DIFFICULTY BUTTONS */
+// ======================
+// DIFFICULTY BUTTONS
+// ======================
+
 document.querySelectorAll(".difficultyBtn").forEach(btn=>{
 btn.onclick=()=>{
 
@@ -18,18 +20,32 @@ document.querySelectorAll(".difficultyBtn")
 btn.classList.add("active");
 
 selectedDifficulty = btn.dataset.difficulty;
-mode = "normal";
 
 };
 });
 
-/* RANDOM MODE */
+// ======================
+// RANDOM BUTTON (DIRECT)
+// ======================
+
 document.getElementById("randomBtn").onclick = () => {
-mode = "random";
-showNotification("🎲 Mode Random activé (x2)");
+
+if(currentTurn !== playerName){
+showNotification("Ce n'est pas ton tour");
+return;
+}
+
+ws.send(JSON.stringify({
+type:"draw-action",
+mode:"random"
+}));
+
 };
 
-/* JOIN */
+// ======================
+// JOIN
+// ======================
+
 document.getElementById("joinGame").onclick=()=>{
 
 playerName =
@@ -50,7 +66,10 @@ name:playerName
 }));
 };
 
-/* MAIN BUTTON */
+// ======================
+// MAIN BUTTON (NORMAL MODE)
+// ======================
+
 document.getElementById("mainButton").onclick=()=>{
 
 if(currentTurn!==playerName){
@@ -59,32 +78,42 @@ return;
 }
 
 if(currentAction){
+
 ws.send(JSON.stringify({
 type:"complete-action"
 }));
+
 return;
 }
 
 ws.send(JSON.stringify({
 type:"draw-action",
 difficulty:selectedDifficulty,
-mode:mode
+mode:"normal"
 }));
 };
 
-/* REMATCH */
+// ======================
+// REMATCH
+// ======================
+
 document.getElementById("rematchBtn").onclick=()=>{
+
 ws.send(JSON.stringify({
 type:"rematch"
 }));
+
 };
 
-/* SOCKET */
+// ======================
+// SOCKET
+// ======================
+
 ws.onmessage=(event)=>{
 
 const data = JSON.parse(event.data);
 
-/* START */
+// GAME START
 if(data.type==="game-start"){
 
 document.getElementById("menu").style.display="none";
@@ -105,7 +134,7 @@ document.getElementById("rematchBtn").style.display="none";
 currentAction=null;
 }
 
-/* ACTION */
+// ACTION
 if(data.type==="action-drawn"){
 
 currentAction=data.action;
@@ -124,37 +153,47 @@ document.getElementById("actionPoints").innerText =
 document.getElementById("mainButton").innerText="Défi terminé";
 }
 
-/* UPDATE */
+// UPDATE
 if(data.type==="update"){
 
 updateScores(data.players);
+
 currentTurn=data.currentTurn;
+
 updateTurn();
 
 resetCard();
+
 currentAction=null;
 
 document.getElementById("mainButton").innerText="Découvrir le défi";
 }
 
-/* VICTORY */
+// VICTORY
 if(data.type==="victory"){
 
 document.getElementById("actionText").innerText =
 data.winner + " a gagné 🏆";
 
 document.getElementById("mainButton").disabled=true;
+
 document.getElementById("rematchBtn").style.display="block";
 }
 
-/* DISCONNECT */
+// DISCONNECT
 if(data.type==="player-disconnected"){
+
 showNotification("⚠️ Joueur déconnecté");
+
 document.getElementById("mainButton").disabled=true;
 }
+
 };
 
-/* UI FUNCTIONS */
+// ======================
+// UI FUNCTIONS
+// ======================
+
 function updateScores(players){
 
 if(players[0]){
@@ -180,6 +219,7 @@ banner.innerText="⏳ Tour de "+currentTurn;
 }
 
 function resetCard(){
+
 document.getElementById("difficultyBadge").innerText="Choisis une difficulté";
 document.getElementById("actionText").innerText="Prêt à découvrir ton défi ?";
 document.getElementById("actionPoints").innerText="";
