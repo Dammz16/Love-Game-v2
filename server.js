@@ -97,7 +97,7 @@ points:0,
 ws
 });
 
-if(players.length === 2){
+if(players.length === 2 && !gameStarted){
 
 gameStarted = true;
 currentTurn = players[0].name;
@@ -109,11 +109,10 @@ currentTurn
 });
 
 }
-
 }
 
 // ======================
-// DRAW ACTION
+// DRAW ACTION (NORMAL + RANDOM)
 // ======================
 
 if(data.type === "draw-action"){
@@ -123,7 +122,7 @@ if(!player) return;
 
 if(currentTurn !== player.name) return;
 
-/* 🔥 RANDOM MODE */
+/* 🎲 RANDOM MODE DIRECT */
 if(data.mode === "random"){
 
 const allActions = [
@@ -149,10 +148,10 @@ return;
 }
 
 /* 🟢 NORMAL MODE */
-const list = actions[data.difficulty];
-if(!list) return;
+const actionList = actions[data.difficulty];
+if(!actionList) return;
 
-const action = drawAction(list);
+const action = drawAction(actionList);
 
 ws.currentAction = action;
 
@@ -177,7 +176,9 @@ if(!ws.currentAction) return;
 
 player.points += ws.currentAction.points;
 
-history.push(player.name + " : " + ws.currentAction.name);
+history.push(
+player.name + " : " + ws.currentAction.name
+);
 
 if(player.points >= victoryScore){
 
@@ -189,10 +190,10 @@ winner:player.name
 return;
 }
 
-const other = players.find(p => p.name !== player.name);
+const otherPlayer = players.find(p => p.name !== player.name);
 
-if(other){
-currentTurn = other.name;
+if(otherPlayer){
+currentTurn = otherPlayer.name;
 }
 
 broadcast({
@@ -219,7 +220,6 @@ players.forEach(p => p.points = 0);
 
 history = [];
 lastActions = [];
-
 gameStarted = true;
 
 currentTurn = players[0].name;
